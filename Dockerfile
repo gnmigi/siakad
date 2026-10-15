@@ -59,7 +59,8 @@ COPY --from=frontend /app/public/build ./public/build
 RUN composer install --no-dev --no-scripts --optimize-autoloader --no-interaction
 
 # Set correct permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Copy and setup entrypoint script
