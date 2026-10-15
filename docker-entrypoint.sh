@@ -18,13 +18,16 @@ mkdir -p /var/www/html/storage/framework/cache/data \
          /var/www/html/storage/logs \
          /var/www/html/bootstrap/cache
 
-# Discover packages
+# Clean stale bootstrap cache files from development before discovering
+rm -f /var/www/html/bootstrap/cache/*.php
+
+# Discover packages freshly from installed vendor
 php artisan package:discover --ansi || true
 
 # Storage link
 php artisan storage:link || true
 
-# Clear any stale cache to ensure dynamic environment variables are read
+# Clear any stale caches
 php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
