@@ -9,6 +9,15 @@ sed -i "s/80/$PORT/g" /etc/apache2/sites-available/000-default.conf /etc/apache2
 echo "php_flag display_errors Off" >> /etc/apache2/apache2.conf
 echo "php_value error_log /dev/stderr" >> /etc/apache2/apache2.conf
 
+# Create all necessary storage and cache directories if missing
+mkdir -p /var/www/html/storage/framework/cache/data \
+         /var/www/html/storage/framework/sessions \
+         /var/www/html/storage/framework/views \
+         /var/www/html/storage/framework/testing \
+         /var/www/html/storage/app/public \
+         /var/www/html/storage/logs \
+         /var/www/html/bootstrap/cache
+
 # Discover packages
 php artisan package:discover --ansi || true
 
