@@ -4,19 +4,22 @@ use Illuminate\Support\Facades\Route;
 
     Route::get('/logout', [App\Http\Controllers\AuthController::class, 'handleLogout'])->name('handle-logout');
 
-    Route::get('/signout',[App\Http\Controllers\Admin\AuthController::class, 'AuthSignOutPost'])->name('auth-signout-post');
+    Route::get('/signout',[App\Http\Controllers\AuthController::class, 'handleLogout'])->name('auth-signout-post');
 
     Route::get('/home',[App\Http\Controllers\Private\User\RootController::class, 'renderDashboard'])->name('dashboard-render');
+    Route::get('/dashboard/chart-data',[App\Http\Controllers\Private\User\RootController::class, 'getDashboardChartData'])->name('dashboard-chart-data');
     // PROFILE SECTION
     Route::get('/profile',[App\Http\Controllers\Private\User\RootController::class, 'renderProfile'])->name('profile-render');
     Route::patch('/profile',[App\Http\Controllers\Private\User\RootController::class, 'handleProfile'])->name('profile-handle');
+    Route::post('/profile/upload-photo', [App\Http\Controllers\Private\User\RootController::class, 'uploadPhoto'])->name('profile-upload-photo');
     // KEPEGAWAIAN => ABSENSI
     Route::get('/absen',[App\Http\Controllers\Private\User\Pages\AbsensiController::class, 'renderAbsensi'])->name('absensi-render');
     Route::post('/absen',[App\Http\Controllers\Private\User\Pages\AbsensiController::class, 'handleAbsensi'])->name('absensi-handle');
     Route::patch('/absen/{code}',[App\Http\Controllers\Private\User\Pages\AbsensiController::class, 'updateAbsensi'])->name('absensi-update');
 
 
-    // OLD VERSION IS OBSELETE WITH DELETE AFTER VERSION 2 DONE
+    // OLD VERSION IS OBSOLETE WITH DELETE AFTER VERSION 2 DONE - COMMENTED OUT DUE TO MISSING CONTROLLERS
+    /*
     // GLOBAL MENU
     Route::get('/home/old',[App\Http\Controllers\Admin\HomeController::class, 'index'])->name('home-index');
     Route::get('/home/ajax/GetMhsGender',[App\Http\Controllers\Admin\HomeController::class, 'getMhsGender'])->name('home.ajax-mhs-gender');
@@ -82,3 +85,4 @@ use Illuminate\Support\Facades\Route;
     Route::post('/system/notify/store',[App\Http\Controllers\Core\NotifyController::class, 'store'])->name('system.notify-store');
     Route::patch('/system/notify/{code}/update',[App\Http\Controllers\Core\NotifyController::class, 'update'])->name('system.notify-update');
     Route::delete('/system/notify/{code}/destroy',[App\Http\Controllers\Core\NotifyController::class, 'destroy'])->name('system.notify-destroy');
+    */

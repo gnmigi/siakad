@@ -1,9 +1,9 @@
 @extends('base.base-dash-index')
 @section('title')
-    Data Pengguna Mahasiswa - Siakad By Internal Developer
+    Data Pengguna Mahasantri - Siakad By Internal Developer
 @endsection
 @section('menu')
-    Data Pengguna Mahasiswa
+    Data Pengguna Mahasantri
 @endsection
 @section('submenu')
     Tambah Data
@@ -13,7 +13,7 @@
 {{ route($prefix.'workers.student-index') }}
 @endsection
 @section('subdesc')
-    Halaman untuk menambah data Mahasiswa baru
+    Halaman untuk menambah data Mahasantri baru
 @endsection
 @section('content')
 <form action="{{ route($prefix.'workers.student-store') }}" method="POST" enctype="multipart/form-data">
@@ -184,7 +184,7 @@
                                     @enderror
                                 </div>
                                 <div class="form-group col-lg-6 col-12">
-                                    <label for="mhs_wali_name">Nama Wali Mahasiswa</label>
+                                    <label for="mhs_wali_name">Nama Wali Mahasantri</label>
                                     <input type="text" class="form-control" name="mhs_wali_name" id="mhs_wali_name" placeholder="nama wali...">
                                     @error('mhs_wali_name')
                                         <small class="text-danger">{{ $message }}</small>
@@ -240,7 +240,7 @@
 
                             <div class="row">
                                 <div class="form-group col-lg-6 col-12">
-                                    <label for="mhs_user">Username Mahasiswa</label>
+                                    <label for="mhs_user">Username Mahasantri</label>
                                     <input type="text" class="form-control" name="mhs_user" id="mhs_user">
                                     @error('mhs_user')
                                         <small class="text-danger">{{ $message }}</small>
@@ -248,13 +248,13 @@
 
                                 </div>
                                 <div class="form-group col-lg-6 col-12">
-                                    <label for="mhs_stat">Pilih Status Mahasiswa</label>
+                                    <label for="mhs_stat">Pilih Status Mahasantri</label>
                                     <select name="mhs_stat" id="mhs_stat" class="form-select">
-                                        <option value="" selected>Pilih Status Mahasiswa</option>
-                                        <option value="0">Calon Mahasiswa</option>
-                                        <option value="1">Mahasiswa Aktif</option>
-                                        <option value="2">Mahasiswa Non-Aktif</option>
-                                        <option value="3">Mahasiswa Alumni</option>
+                                        <option value="" selected>Pilih Status Mahasantri</option>
+                                        <option value="0">Calon Mahasantri</option>
+                                        <option value="1">Mahasantri Aktif</option>
+                                        <option value="2">Mahasantri Non-Aktif</option>
+                                        <option value="3">Mahasantri Alumni</option>
 
 
                                     </select>

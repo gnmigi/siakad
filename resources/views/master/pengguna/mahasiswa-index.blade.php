@@ -157,7 +157,7 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">{{ $pages }}</h5>
                     <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseForm" aria-expanded="false" aria-controls="collapseForm">
-                        <i class="fas fa-plus-circle me-2"></i>Tambah Mahasiswa
+                        <i class="fas fa-plus-circle me-2"></i>Tambah Mahasantri
                     </button>
                 </div>
                 <div class="card-body">
@@ -165,13 +165,13 @@
                     <div class="row mb-4">
                         <div class="col-md-6 mb-2">
                             <div class="p-3 bg-light-primary rounded">
-                                <h6 class="mb-2">Total Mahasiswa</h6>
+                                <h6 class="mb-2">Total Mahasantri</h6>
                                 <h3 class="mb-0">{{ $mahasiswa ? count($mahasiswa) : 0 }}</h3>
                             </div>
                         </div>
                         <div class="col-md-6 mb-2">
                             <div class="p-3 bg-light-success rounded">
-                                <h6 class="mb-2">Mahasiswa Aktif</h6>
+                                <h6 class="mb-2">Mahasantri Aktif</h6>
                                 <h3 class="mb-0">{{ $mahasiswa ? $mahasiswa->where('type', 1)->count() : 0 }}</h3>
                             </div>
                         </div>
@@ -180,7 +180,7 @@
                     <!-- Collapsible Form -->
                     <div class="collapse" id="collapseForm">
                         <div class="card card-body border">
-                            <h5 class="card-title mb-3">Tambah Mahasiswa Baru</h5>
+                            <h5 class="card-title mb-3">Tambah Mahasantri Baru</h5>
                             <form action="{{ route($spref . 'pengguna.mahasiswa-handle') }}" method="post">
                                 @csrf
                                 <div class="row">
@@ -213,15 +213,15 @@
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="numb_nim" class="form-label">NIM</label>
-                                        <input type="text" class="form-control" name="numb_nim" id="numb_nim" required>
+                                        <label for="numb_nim" class="form-label">NIM <span class="text-muted" id="nim-optional">(Opsional untuk calon mahasiswa)</span></label>
+                                        <input type="text" class="form-control" name="numb_nim" id="numb_nim">
                                         @error('numb_nim')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="prodi_id" class="form-label">Program Studi</label>
-                                        <select class="form-select" name="prodi_id" id="prodi_id" required>
+                                        <label for="prodi_id" class="form-label">Program Studi <span class="text-muted" id="prodi-optional">(Opsional untuk calon mahasiswa)</span></label>
+                                        <select class="form-select" name="prodi_id" id="prodi_id">
                                             <option value="">Pilih Program Studi</option>
                                             @foreach ($prodi as $p)
                                                 <option value="{{ $p->id }}">{{ $p->name }}</option>
@@ -235,10 +235,10 @@
                                         <label for="type" class="form-label">Status</label>
                                         <select class="form-select" name="type" id="type" required>
                                             <option value="">Pilih Status</option>
-                                            <option value="0">Calon Mahasiswa Baru</option>
-                                            <option value="1">Mahasiswa Aktif</option>
-                                            <option value="2">Mahasiswa Non-Aktif</option>
-                                            <option value="3">Mahasiswa Alumni</option>
+                                            <option value="0">Calon Mahasantri Baru</option>
+                                            <option value="1">Mahasantri Aktif</option>
+                                            <option value="2">Mahasantri Non-Aktif</option>
+                                            <option value="3">Mahasantri Alumni</option>
                                         </select>
                                         @error('type')
                                             <small class="text-danger">{{ $message }}</small>
@@ -299,16 +299,23 @@
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <a href="{{ route($spref.'pengguna.mahasiswa-views', $item->code) }}" class="btn btn-sm btn-secondary" data-bs-toggle="tooltip" title="Lihat Mahasiswa">
+                                                <a href="{{ route($spref.'pengguna.mahasiswa-views', $item->code) }}" class="btn btn-sm btn-secondary" data-bs-toggle="tooltip" title="Lihat Mahasantri">
                                                     <i class="fa-solid fa-eye"></i>
                                                 </a>
-                                                <a href="#" data-bs-toggle="modal" data-bs-target="#editData{{ $item->code }}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Edit Mahasiswa">
+                                                <a href="#" data-bs-toggle="modal" data-bs-target="#editData{{ $item->code }}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Edit Mahasantri">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
+                                                <form action="{{ route($spref . 'pengguna.mahasiswa-reset-password', $item->code) }}" method="POST" class="d-inline" id="reset-form-{{ $item->code }}">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="tooltip" title="Reset Password" onclick="confirmResetPassword('{{ $item->code }}')">
+                                                        <i class="fas fa-key"></i>
+                                                    </button>
+                                                </form>
                                                 <form action="{{ route($spref . 'pengguna.mahasiswa-delete', $item->code) }}" method="POST" class="d-inline" id="delete-form-{{ $item->code }}">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="button" class="btn btn-sm btn-danger" data-confirm-delete="true" data-bs-toggle="tooltip" title="Hapus Mahasiswa" onclick="confirmDelete('{{ $item->code }}')">
+                                                    <button type="button" class="btn btn-sm btn-danger" data-confirm-delete="true" data-bs-toggle="tooltip" title="Hapus Mahasantri" onclick="confirmDelete('{{ $item->code }}')">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>
@@ -327,24 +334,45 @@
         <div class="col-lg-4 col-12 mb-2">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title">Informasi Mahasiswa</h5>
+                    <h5 class="card-title">Informasi Mahasantri</h5>
                 </div>
                 <div class="card-body">
-                    <p>Bagian ini menampilkan informasi umum dan petunjuk terkait pengelolaan data Mahasiswa.</p>
+                    <p>Bagian ini menampilkan informasi umum dan petunjuk terkait pengelolaan data Mahasantri.</p>
                     
                     <div class="alert alert-light-success">
                         <h6 class="">Petunjuk Penggunaan:</h6>
                         <ul class="mb-0">
-                            <li>Klik tombol "Tambah Mahasiswa" untuk menambahkan mahasiswa baru</li>
+                            <li>Klik tombol "Tambah Mahasantri" untuk menambahkan mahasiswa baru</li>
                             <li>Klik ikon <i class="fas fa-eye"></i> untuk melihat detail mahasiswa</li>
                             <li>Klik ikon <i class="fas fa-edit"></i> untuk mengedit data mahasiswa</li>
+                            <li>Klik ikon <i class="fas fa-key"></i> untuk reset password mahasiswa</li>
                             <li>Klik ikon <i class="fas fa-trash"></i> untuk menghapus mahasiswa</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-light-info">
+                        <h6 class="">Informasi Password:</h6>
+                        <ul class="mb-0">
+                            <li><strong>Password Default:</strong> 12345678</li>
+                            <li>Password default digunakan untuk mahasiswa baru dari import Excel</li>
+                            <li>Admin dapat mereset password mahasiswa ke default</li>
+                            <li>Mahasantri dapat mengubah password melalui profil mereka</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-light-warning">
+                        <h6 class="">Fitur Export/Import Password:</h6>
+                        <ul class="mb-0">
+                            <li><strong>Export:</strong> Password terenkripsi akan disertakan dalam file Excel</li>
+                            <li><strong>Import:</strong> Sistem otomatis mendeteksi password terenkripsi atau plain text</li>
+                            <li>Contoh password plain text: <code>siswa123</code> → otomatis dienkripsi</li>
+                            <li>Password terenkripsi dari export akan digunakan langsung</li>
                         </ul>
                     </div>
 
                     @if(count($mahasiswa) > 0)
                         <div class="mt-4">
-                            <h6>Mahasiswa Terbaru</h6>
+                            <h6>Mahasantri Terbaru</h6>
                             <div class="list-group">
                                 @foreach($mahasiswa->sortByDesc('created_at')->take(3) as $mhs)
                                     <div class="list-group-item list-group-item-action">
@@ -373,7 +401,7 @@
                         @method('patch')
                         @csrf
                         <div class="modal-header">
-                            <h5 class="modal-title" id="editModalLabel{{ $item->code }}">Edit Mahasiswa - {{ $item->name }}</h5>
+                            <h5 class="modal-title" id="editModalLabel{{ $item->code }}">Edit Mahasantri - {{ $item->name }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
@@ -408,14 +436,14 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="edit_numb_nim{{ $item->code }}" class="form-label">NIM</label>
-                                    <input type="text" class="form-control" name="numb_nim" id="edit_numb_nim{{ $item->code }}" value="{{ $item->numb_nim }}" required>
+                                    <input type="text" class="form-control" name="numb_nim" id="edit_numb_nim{{ $item->code }}" value="{{ $item->numb_nim }}" {{ $item->raw_type != 0 ? 'required' : '' }}>
                                     @error('numb_nim')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="edit_prodi_id{{ $item->code }}" class="form-label">Program Studi</label>
-                                    <select class="form-select" name="prodi_id" id="edit_prodi_id{{ $item->code }}" required>
+                                    <select class="form-select" name="prodi_id" id="edit_prodi_id{{ $item->code }}" {{ $item->raw_type != 0 ? 'required' : '' }}>
                                         <option value="">Pilih Program Studi</option>
                                         @foreach ($prodi as $p)
                                             <option value="{{ $p->id }}" {{ $item->prodi_id == $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
@@ -429,10 +457,10 @@
                                     <label for="edit_type{{ $item->code }}" class="form-label">Status</label>
                                     <select class="form-select" name="type" id="edit_type{{ $item->code }}" required>
                                         <option value="">Pilih Status</option>
-                                        <option value="0" {{ $item->raw_type == 0 ? 'selected' : '' }}>Calon Mahasiswa Baru</option>
-                                        <option value="1" {{ $item->raw_type == 1 ? 'selected' : '' }}>Mahasiswa Aktif</option>
-                                        <option value="2" {{ $item->raw_type == 2 ? 'selected' : '' }}>Mahasiswa Non-Aktif</option>
-                                        <option value="3" {{ $item->raw_type == 3 ? 'selected' : '' }}>Mahasiswa Alumni</option>
+                                        <option value="0" {{ $item->raw_type == 0 ? 'selected' : '' }}>Calon Mahasantri Baru</option>
+                                        <option value="1" {{ $item->raw_type == 1 ? 'selected' : '' }}>Mahasantri Aktif</option>
+                                        <option value="2" {{ $item->raw_type == 2 ? 'selected' : '' }}>Mahasantri Non-Aktif</option>
+                                        <option value="3" {{ $item->raw_type == 3 ? 'selected' : '' }}>Mahasantri Alumni</option>
                                     </select>
                                     @error('type')
                                         <small class="text-danger">{{ $message }}</small>
@@ -494,6 +522,43 @@
             });
         });
 
+        // Handle status change untuk form tambah
+        $('#type').on('change', function() {
+            const selectedType = $(this).val();
+            const nimField = $('#numb_nim');
+            const prodiField = $('#prodi_id');
+            const nimOptional = $('#nim-optional');
+            const prodiOptional = $('#prodi-optional');
+            
+            if (selectedType === '0') { // Calon mahasiswa
+                nimField.removeAttr('required');
+                prodiField.removeAttr('required');
+                nimOptional.show();
+                prodiOptional.show();
+            } else { // Mahasantri aktif/non-aktif/alumni
+                nimField.attr('required', 'required');
+                prodiField.attr('required', 'required');
+                nimOptional.hide();
+                prodiOptional.hide();
+            }
+        });
+
+        // Handle status change untuk form edit
+        $('[id^="edit_type"]').on('change', function() {
+            const selectedType = $(this).val();
+            const code = $(this).attr('id').replace('edit_type', '');
+            const nimField = $('#edit_numb_nim' + code);
+            const prodiField = $('#edit_prodi_id' + code);
+            
+            if (selectedType === '0') { // Calon mahasiswa
+                nimField.removeAttr('required');
+                prodiField.removeAttr('required');
+            } else { // Mahasantri aktif/non-aktif/alumni
+                nimField.attr('required', 'required');
+                prodiField.attr('required', 'required');
+            }
+        });
+
         // Konfirmasi delete dengan SweetAlert
         function confirmDelete(code) {
             Swal.fire({
@@ -508,6 +573,24 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     document.getElementById('delete-form-' + code).submit();
+                }
+            });
+        }
+
+        // Konfirmasi reset password dengan SweetAlert
+        function confirmResetPassword(code) {
+            Swal.fire({
+                title: 'Reset Password Mahasantri?',
+                text: "Password akan direset ke: 12345678",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, reset password!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('reset-form-' + code).submit();
                 }
             });
         }

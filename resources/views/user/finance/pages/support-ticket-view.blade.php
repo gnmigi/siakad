@@ -34,7 +34,7 @@
                 </div>
                 <div class="card-body row">
                     <div class="form-group col-lg-4 col-12">
-                        <label for="name">Nama Mahasiswa</label>
+                        <label for="name">Nama Mahasantri</label>
                         <input type="text" name="name" id="name" class="form-control" readonly value="{{ Auth::user()->name }}">
                         @error('name')
                             <small class="text-danger">{{ $message }}</small>

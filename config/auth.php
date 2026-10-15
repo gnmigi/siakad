@@ -47,6 +47,10 @@ return [
         'dosen' => [
             'driver' => 'session',
             'provider' => 'dosens',
+        ],
+        'pendaftar' => [
+            'driver' => 'session',
+            'provider' => 'pendaftars',
         ]
     ],
 
@@ -74,11 +78,15 @@ return [
         ],
         'mahasiswas' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Mahasiswa::class,
+            'model' => App\Models\Mahasantri::class,
         ],
         'dosens' => [
             'driver' => 'eloquent',
             'model' => App\Models\Dosen::class,
+        ],
+        'pendaftars' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\PMB\Pendaftar::class,
         ]
 
         // 'users' => [
@@ -121,6 +129,12 @@ return [
         ],
         'dosens' => [
             'provider' => 'dosens',
+            'table' => 'password_reset_tokens',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+        'pendaftars' => [
+            'provider' => 'pendaftars',
             'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,

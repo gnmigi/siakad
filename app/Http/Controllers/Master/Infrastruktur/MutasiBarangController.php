@@ -25,7 +25,7 @@ class MutasiBarangController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Mutasi Barang";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         $data['mutasiBarangs'] = MutasiBarang::with(['barang', 'lokasiAwal', 'lokasiAkhir'])->latest()->get();
         $data['barangs'] = Barang::all();
         $data['ruangs'] = Ruang::all();

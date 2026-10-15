@@ -8,6 +8,7 @@ use App\Traits\HasLogAktivitas;
 // USE MODELS
 use App\Models\Akademik\ProgramStudi;
 use App\Models\Akademik\Kurikulum;
+use App\Models\Akademik\JadwalKuliah;
 use App\Models\Dosen;
 
 class MataKuliah extends Model
@@ -50,5 +51,10 @@ class MataKuliah extends Model
     public function dosen3()
     {
         return $this->belongsTo(Dosen::class, 'dosen3_id');
+    }
+
+    public function jadwalKuliah()
+    {
+        return $this->hasMany(JadwalKuliah::class, 'matkul_id');
     }
 }

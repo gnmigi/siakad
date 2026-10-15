@@ -8,8 +8,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 // Use Models
 use App\Models\Keuangan\Saldo;
+use App\Models\Keuangan\PaymentTransaction;
+use App\Models\Keuangan\RiwayatPembayaran;
 use App\Models\Pengaturan\WebSetting;
 // Use Plugins
 
@@ -22,8 +25,61 @@ class SaldoController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Saldo";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
-        $data['saldos'] = Saldo::all();
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
+        
+        // Get all saldo records with enhanced statistics
+        $data['saldos'] = Saldo::with([
+                'tagihan' => function($q) { $q->select('id', 'mahasiswa_id', 'code', 'desc'); },
+                'tagihan.mahasiswa' => function($q) { $q->select('id', 'name', 'numb_nim'); },
+                'createdBy' => function($q) { $q->select('id', 'name'); }
+            ])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        // Calculate comprehensive statistics
+        $globalStats = Saldo::where('status', 'Sukses')
+            ->selectRaw('SUM(CASE WHEN type = "Pemasukan" THEN amount ELSE 0 END) as total_pemasukan')
+            ->selectRaw('SUM(CASE WHEN type = "Pengeluaran" THEN amount ELSE 0 END) as total_pengeluaran')
+            ->first();
+
+        $todayStats = Saldo::where('status', 'Sukses')
+            ->whereDate('created_at', Carbon::today('Asia/Jakarta'))
+            ->selectRaw('COUNT(*) as total_transaksi')
+            ->selectRaw('SUM(CASE WHEN type = "Pemasukan" THEN amount ELSE 0 END) as pemasukan_hari_ini')
+            ->selectRaw('SUM(CASE WHEN type = "Pengeluaran" THEN amount ELSE 0 END) as pengeluaran_hari_ini')
+            ->first();
+
+        $data['statistics'] = [
+            'total_pemasukan' => $globalStats->total_pemasukan ?? 0,
+            'total_pengeluaran' => $globalStats->total_pengeluaran ?? 0,
+            'saldo_bersih' => ($globalStats->total_pemasukan ?? 0) - ($globalStats->total_pengeluaran ?? 0),
+            'total_transaksi_hari_ini' => $todayStats->total_transaksi ?? 0,
+            'pemasukan_hari_ini' => $todayStats->pemasukan_hari_ini ?? 0,
+            'pengeluaran_hari_ini' => $todayStats->pengeluaran_hari_ini ?? 0,
+            'total_pembayaran_mahasiswa' => PaymentTransaction::where('is_manual', true)
+                ->where('status', 'verified')
+                ->sum('paid_amount'),
+            'pembayaran_mahasiswa_bulan_ini' => PaymentTransaction::where('is_manual', true)
+                ->where('status', 'verified')
+                ->whereMonth('created_at', Carbon::now('Asia/Jakarta')->month)
+                ->whereYear('created_at', Carbon::now('Asia/Jakarta')->year)
+                ->sum('paid_amount'),
+            'jumlah_mahasiswa_bayar_hari_ini' => PaymentTransaction::where('is_manual', true)
+                ->where('status', 'verified')
+                ->whereDate('created_at', Carbon::today('Asia/Jakarta'))
+                ->distinct('mahasiswa_id')
+                ->count('mahasiswa_id')
+        ];
+        
+        // Recent transactions for dashboard
+        $data['recent_transactions'] = Saldo::with([
+                'tagihan' => function($q) { $q->select('id', 'mahasiswa_id', 'code', 'desc'); },
+                'tagihan.mahasiswa' => function($q) { $q->select('id', 'name', 'numb_nim'); },
+                'createdBy' => function($q) { $q->select('id', 'name'); }
+            ])
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
         
         return view('master.keuangan.saldo-index', $data, compact('user'));
     }

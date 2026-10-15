@@ -5,7 +5,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     @PwaHead
-    <title>{{ (isset($menus) ? $menus . ' - ' : '') . $pages . ' - ' . $academy }}</title>
+    
+    @php
+        // Set up SEO data
+        $seoTitle = isset($seo_title) ? $seo_title : (isset($menus) ? $menus : (isset($pages) ? $pages : 'Beranda'));
+        $seoDescription = isset($seo_description) ? $seo_description : null;
+        $seoKeywords = isset($seo_keywords) ? $seo_keywords : null;
+        $seoImage = isset($seo_image) ? $seo_image : null;
+        
+        // Configure SEO service
+        if (isset($seo)) {
+            $seo->setTitle($seoTitle);
+            if ($seoDescription) $seo->setDescription($seoDescription);
+            if ($seoKeywords) $seo->setKeywords($seoKeywords);
+            if ($seoImage) $seo->setImage($seoImage);
+        }
+    @endphp
+    
+    <title>{{ isset($seo) ? $seo->getTitle() : ((isset($menus) ? $menus . ' - ' : '') . (isset($pages) ? $pages : 'Beranda') . ' - ' . (isset($academy) ? $academy : config('app.name'))) }}</title>
+    
+    @if(isset($seo))
+        {!! $seo->generateMetaTags() !!}
+        {!! $seo->generateStructuredData() !!}
+    @else
+        <meta name="description" content="Ma'had Aly Ma'al Amin - Perguruan Tinggi Islam yang menyelenggarakan pendidikan berkualitas dengan nilai-nilai keislaman.">
+        <meta name="keywords" content="Ma'had Aly Ma'al Amin, perguruan tinggi islam, pendidikan islam, kuliah islam, universitas islam">
+        <meta name="author" content="{{ config('app.name') }}">
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+        <meta name="googlebot" content="index, follow">
+        
+        <meta property="og:title" content="{{ (isset($menus) ? $menus . ' - ' : '') . (isset($pages) ? $pages : 'Beranda') . ' - ' . config('app.name') }}">
+        <meta property="og:description" content="Ma'had Aly Ma'al Amin - Perguruan Tinggi Islam yang menyelenggarakan pendidikan berkualitas dengan nilai-nilai keislaman.">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:site_name" content="{{ config('app.name') }}">
+        <meta property="og:locale" content="id_ID">
+        
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ (isset($menus) ? $menus . ' - ' : '') . (isset($pages) ? $pages : 'Beranda') . ' - ' . config('app.name') }}">
+        <meta name="twitter:description" content="Ma'had Aly Ma'al Amin - Perguruan Tinggi Islam yang menyelenggarakan pendidikan berkualitas dengan nilai-nilai keislaman.">
+        
+        <meta name="theme-color" content="#0d9488">
+        <meta name="msapplication-TileColor" content="#0d9488">
+        
+        <link rel="canonical" href="{{ url()->current() }}">
+        
+        <!-- Default Structured Data -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "EducationalOrganization",
+            "name": "Ma'had Aly Ma'al Amin",
+            "url": "{{ config('app.url', 'https://maalamin.ac.id') }}",
+            "description": "Ma'had Aly Ma'al Amin - Perguruan Tinggi Islam yang menyelenggarakan pendidikan berkualitas dengan nilai-nilai keislaman.",
+            "address": {
+                "@type": "PostalAddress",
+                "addressCountry": "ID",
+                "addressLocality": "Indonesia"
+            },
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "contactType": "customer service",
+                "url": "{{ config('app.url', 'https://maalamin.ac.id') }}/kontak"
+            },
+            "sameAs": [
+                "https://www.facebook.com/maalamin",
+                "https://www.instagram.com/maalamin",
+                "https://www.youtube.com/maalamin"
+            ]
+        }
+        </script>
+    @endif
+    <!-- Dynamic Favicon from Web Settings -->
+    @if(isset($webs) && $webs->school_logo)
+        <link rel="icon" type="image/png" href="{{ $webs->school_logo }}">
+        <link rel="shortcut icon" type="image/png" href="{{ $webs->school_logo }}">
+        <link rel="apple-touch-icon" href="{{ $webs->school_logo }}">
+    @else
+        <link rel="icon" type="image/png" href="{{ asset('favicon.ico') }}">
+        <link rel="shortcut icon" type="image/png" href="{{ asset('favicon.ico') }}">
+    @endif
     <!-- BEGIN GLOBAL MANDATORY STYLES -->
     <link href="{{ asset('dashboard') }}/dist/css/tabler.css" rel="stylesheet" />
     <!-- END GLOBAL MANDATORY STYLES -->
@@ -16,20 +95,49 @@
     <!-- BEGIN DEMO STYLES -->
     <link href="{{ asset('dashboard') }}/preview/css/demo.css" rel="stylesheet" />
     <style>
-        /* Chat Button Styles */
+        /* Enhanced Teal Theme Integration */
+        :root {
+            /* Teal color palette */
+            --teal-50: #f0fdfa;
+            --teal-100: #ccfbf1;
+            --teal-200: #99f6e4;
+            --teal-300: #5eead4;
+            --teal-400: #2dd4bf;
+            --teal-500: #14b8a6;
+            --teal-600: #0d9488;
+            --teal-700: #0f766e;
+            --teal-800: #115e59;
+            --teal-900: #134e4a;
+            --teal-950: #042f2e;
+        }
+
+        /* Override default Tabler primary colors with teal */
+        :root {
+            --tblr-primary: #0d9488;
+            --tblr-primary-rgb: 13, 148, 136;
+            --tblr-primary-fg: #ffffff;
+        }
+
+        [data-bs-theme="dark"] {
+            --tblr-primary: #2dd4bf;
+            --tblr-primary-rgb: 45, 212, 191;
+            --tblr-primary-fg: #042f2e;
+        }
+
+        /* Enhanced Chat Button Styles with Teal Theme */
         .chat-button {
             position: fixed;
             bottom: 30px;
             right: 30px;
             width: 60px;
             height: 60px;
-            background: var(--tblr-primary);
+            background: linear-gradient(135deg, var(--tblr-primary), #14b8a6);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(var(--tblr-primary-rgb), 0.3);
             transition: all 0.3s ease;
             z-index: 1000;
         }
@@ -42,10 +150,14 @@
 
         .chat-button:hover {
             transform: scale(1.1);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 6px 16px rgba(var(--tblr-primary-rgb), 0.4);
         }
 
-        /* Chat Popup Styles */
+        [data-bs-theme="dark"] .chat-button:hover {
+            box-shadow: 0 6px 16px rgba(var(--tblr-primary-rgb), 0.5);
+        }
+
+        /* Enhanced Chat Popup Styles */
         .chat-popup {
             position: fixed;
             bottom: 100px;
@@ -59,6 +171,13 @@
             backdrop-filter: blur(10px);
             border: 1px solid var(--tblr-border-color);
             overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        [data-bs-theme="dark"] .chat-popup {
+            background: var(--tblr-bg-surface);
+            border-color: var(--tblr-border-color);
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
         }
 
         .chat-popup.show {
@@ -72,6 +191,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            background: linear-gradient(135deg, rgba(var(--tblr-primary-rgb), 0.1), rgba(var(--tblr-primary-rgb), 0.05));
         }
 
         .chat-popup-body {
@@ -89,6 +209,8 @@
                 transform: translateY(0);
             }
         }
+
+        /* Enhanced Navbar Styles */
         .navbar {
             width: 100vw !important;
             margin-left: calc((100vw - 100%) / -2);
@@ -96,6 +218,50 @@
             left: 0;
             right: 0;
             border-radius: 0 !important;
+            transition: all 0.3s ease;
+        }
+
+        /* Enhanced Theme Toggle Buttons */
+        .nav-link[title*="dark"], .nav-link[title*="light"] {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+
+        .nav-link[title*="dark"]:hover, .nav-link[title*="light"]:hover {
+            background: rgba(var(--tblr-primary-rgb), 0.1);
+            transform: scale(1.1);
+        }
+
+        /* Enhanced Dropdown Styles */
+        .dropdown-menu {
+            border: 1px solid var(--tblr-border-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        [data-bs-theme="dark"] .dropdown-menu {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Enhanced Footer Styles */
+        .footer {
+            transition: all 0.3s ease;
+        }
+
+        /* Smooth transitions for all elements */
+        * {
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Enhanced Settings Panel */
+        .settings .btn-floating {
+            background: linear-gradient(135deg, var(--tblr-primary), #14b8a6);
+            box-shadow: 0 4px 12px rgba(var(--tblr-primary-rgb), 0.3);
+        }
+
+        .settings .btn-floating:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(var(--tblr-primary-rgb), 0.4);
         }
     </style>
 
@@ -122,8 +288,8 @@
                 <!-- END NAVBAR TOGGLER -->
                 <!-- BEGIN NAVBAR LOGO -->
                 <div class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
-                    <a href="." aria-label="Tabler">
-                        <img src="{{ $webs->school_logo_hori }}" style="height: 32px;" alt="Neco Siakad Logo">
+                    <a href="{{ route('root.home-index') }}" aria-label="Tabler">
+                        <img src="{{ $webs->school_logo_hori }}" style="max-height: 32px; max-width: 200px; height: auto; width: auto; object-fit: contain;" alt="Maal Amin">
                     </a>
                 </div>
                 <!-- END NAVBAR LOGO -->
@@ -160,76 +326,81 @@
                                         <div class="btn-close ms-auto" data-bs-dismiss="dropdown"></div>
                                     </div>
                                     <div class="list-group list-group-flush list-group-hoverable">
-                                        <div class="list-group-item">
-                                            <div class="row align-items-center">
-                                                <div class="col-auto"><span class="status-dot status-dot-animated bg-red d-block"></span>
-                                                </div>
-                                                <div class="col text-truncate">
-                                                    <a href="#" class="text-body d-block">Pengumuman: Jadwal UTS</a>
-                                                    <div class="d-block text-secondary text-truncate mt-n1">Jadwal UTS Semester Ganjil 2023/2024 telah dirilis</div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <a href="#" class="list-group-item-actions">
-                                                        <!-- Download SVG icon from http://tabler.io/icons/icon/star -->
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-muted icon-2">
-                                                            <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="list-group-item">
-                                            <div class="row align-items-center">
-                                                <div class="col-auto"><span class="status-dot d-block"></span></div>
-                                                <div class="col text-truncate">
-                                                    <a href="#" class="text-body d-block">Info: Pembayaran UKT</a>
-                                                    <div class="d-block text-secondary text-truncate mt-n1">Pengingat: Batas akhir pembayaran UKT tanggal 30 September 2023</div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <a href="#" class="list-group-item-actions show">
-                                                        <!-- Download SVG icon from http://tabler.io/icons/icon/star -->
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-yellow icon-2">
-                                                            <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="list-group-item">
-                                            <div class="row align-items-center">
-                                                <div class="col-auto"><span class="status-dot d-block"></span></div>
-                                                <div class="col text-truncate">
-                                                    <a href="#" class="text-body d-block">Akademik: KRS</a>
-                                                    <div class="d-block text-secondary text-truncate mt-n1">Pengisian KRS akan dibuka pada tanggal 15 September 2023</div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <a href="#" class="list-group-item-actions">
-                                                        <!-- Download SVG icon from http://tabler.io/icons/icon/star -->
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-muted icon-2">
-                                                            <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="list-group-item">
-                                            <div class="row align-items-center">
-                                                <div class="col-auto"><span class="status-dot status-dot-animated bg-green d-block"></span>
-                                                </div>
-                                                <div class="col text-truncate">
-                                                    <a href="#" class="text-body d-block">Info: Beasiswa</a>
-                                                    <div class="d-block text-secondary text-truncate mt-n1">Pendaftaran beasiswa prestasi telah dibuka</div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <a href="#" class="list-group-item-actions">
-                                                        <!-- Download SVG icon from http://tabler.io/icons/icon/star -->
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-muted icon-2">
-                                                            <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
-                                                        </svg>
-                                                    </a>
+                                        @php
+                                            // Get latest pengumuman and berita for notifications
+                                            $notifications = collect();
+                                            
+                                            try {
+                                                $pengumuman = \App\Models\Publikasi\Pengumuman::where('status', 'Publish')
+                                                    ->with('kategori')
+                                                    ->latest()
+                                                    ->take(3)
+                                                    ->get();
+                                                
+                                                foreach($pengumuman as $item) {
+                                                    $notifications->push([
+                                                        'type' => 'pengumuman',
+                                                        'title' => 'Pengumuman: ' . $item->name,
+                                                        'description' => strip_tags($item->content),
+                                                        'url' => '#',
+                                                        'date' => $item->created_at,
+                                                        'status' => 'red'
+                                                    ]);
+                                                }
+                                                
+                                                $berita = \App\Models\Publikasi\Berita::where('status', 'Publish')
+                                                    ->with('kategori')
+                                                    ->latest()
+                                                    ->take(2)
+                                                    ->get();
+                                                
+                                                foreach($berita as $item) {
+                                                    $notifications->push([
+                                                        'type' => 'berita',
+                                                        'title' => 'Berita: ' . $item->name,
+                                                        'description' => strip_tags($item->content),
+                                                        'url' => '#',
+                                                        'date' => $item->created_at,
+                                                        'status' => 'green'
+                                                    ]);
+                                                }
+                                                
+                                                $notifications = $notifications->sortByDesc('date')->take(4);
+                                            } catch (\Exception $e) {
+                                                // Fallback to empty collection if tables don't exist
+                                                $notifications = collect();
+                                            }
+                                        @endphp
+                                        
+                                        @forelse($notifications as $notification)
+                                            <div class="list-group-item">
+                                                <div class="row align-items-center">
+                                                    <div class="col-auto">
+                                                        <span class="status-dot @if($notification['status'] == 'red') status-dot-animated bg-red @elseif($notification['status'] == 'green') status-dot-animated bg-green @else @endif d-block"></span>
+                                                    </div>
+                                                    <div class="col text-truncate">
+                                                        <a href="{{ $notification['url'] }}" class="text-body d-block">{{ $notification['title'] }}</a>
+                                                        <div class="d-block text-secondary text-truncate mt-n1">{{ Str::limit($notification['description'], 60) }}</div>
+                                                    </div>
+                                                    <div class="col-auto">
+                                                        <a href="{{ $notification['url'] }}" class="list-group-item-actions">
+                                                            <!-- Download SVG icon from http://tabler.io/icons/icon/star -->
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-muted icon-2">
+                                                                <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
+                                                            </svg>
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        @empty
+                                            <div class="list-group-item">
+                                                <div class="row align-items-center">
+                                                    <div class="col text-center">
+                                                        <div class="text-muted">Tidak ada notifikasi terbaru</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforelse
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
@@ -281,7 +452,7 @@
                                                 </a>
                                             </div>
                                             <div class="col-4">
-                                                <a href="/e-learning" class="d-flex flex-column flex-center text-center text-secondary py-2 px-2 link-hoverable">
+                                                <a href="#" onclick="showDevelopmentMessage(); return false;" class="d-flex flex-column flex-center text-center text-secondary py-2 px-2 link-hoverable">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-device-laptop w-6 h-6 mx-auto mb-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                                         <path d="M3 19l18 0" />
                                                         <path d="M5 6m0 1a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v8a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1z" />
@@ -290,7 +461,7 @@
                                                 </a>
                                             </div>
                                             <div class="col-4">
-                                                <a href="/perpustakaan" class="d-flex flex-column flex-center text-center text-secondary py-2 px-2 link-hoverable">
+                                                <a href="#" onclick="showDevelopmentMessage(); return false;" class="d-flex flex-column flex-center text-center text-secondary py-2 px-2 link-hoverable">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-books w-6 h-6 mx-auto mb-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                                         <path d="M5 4m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z" />
                                                         <path d="M9 4m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z" />
@@ -304,7 +475,7 @@
                                                 </a>
                                             </div>
                                             <div class="col-4">
-                                                <a href="/laboratorium" class="d-flex flex-column flex-center text-center text-secondary py-2 px-2 link-hoverable">
+                                                <a href="#" onclick="showDevelopmentMessage(); return false;" class="d-flex flex-column flex-center text-center text-secondary py-2 px-2 link-hoverable">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-test-pipe w-6 h-6 mx-auto mb-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                                         <path d="M20 8.04l-12.122 12.124a2.857 2.857 0 1 1 -4.041 -4.04l12.122 -12.124" />
                                                         <path d="M7 13h8" />
@@ -315,7 +486,7 @@
                                                 </a>
                                             </div>
                                             <div class="col-4">
-                                                <a href="/kemahasiswaan" class="d-flex flex-column flex-center text-center text-secondary py-2 px-2 link-hoverable">
+                                                <a href="#" onclick="showDevelopmentMessage(); return false;" class="d-flex flex-column flex-center text-center text-secondary py-2 px-2 link-hoverable">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-users w-6 h-6 mx-auto mb-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                                         <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
                                                         <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
@@ -326,7 +497,7 @@
                                                 </a>
                                             </div>
                                             <div class="col-4">
-                                                <a href="/keuangan" class="d-flex flex-column flex-center text-center text-secondary py-2 px-2 link-hoverable">
+                                                <a href="#" onclick="showDevelopmentMessage(); return false;" class="d-flex flex-column flex-center text-center text-secondary py-2 px-2 link-hoverable">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-wallet w-6 h-6 mx-auto mb-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                                         <path d="M17 8v-3a1 1 0 0 0 -1 -1h-10a2 2 0 0 0 0 4h12a1 1 0 0 1 1 1v3m0 4v3a1 1 0 0 1 -1 1h-12a2 2 0 0 1 -2 -2v-12" />
                                                         <path d="M20 12v4h-4a2 2 0 0 1 0 -4h4" />
@@ -341,46 +512,73 @@
                             </div>
                         </div>
                     </div>
+                    @if(isset($user) && $user)
+
                     <div class="nav-item dropdown">
+
                         <a href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown" aria-label="Open user menu">
-                            <span class="avatar avatar-sm" style="background-image: url({{ $user == null ? asset('storage/images/profile/default.jpg') : $user->photo }})">
+
+                            <span class="avatar avatar-sm" style="background-image: url({{ $user->photo ?? asset('storage/images/profile/default.jpg') }})">
+
                             </span>
+
                             <div class="d-none d-xl-block ps-2">
-                                <div>{{ $user == null ? 'Guest' : $user->name }}</div>
-                                <div class="mt-1 small text-secondary">{{ $user == null ? 'Guest' : $user->type }}</div>
+
+                                <div>{{ $user->name }}</div>
+
+                                <div class="mt-1 small text-secondary">{{ $user->type ?? 'User' }}</div>
+
                             </div>
+
                         </a>
+
                         <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                            @auth
-                            <a href="{{ route($spref.'profile-render') }}" class="dropdown-item">
+
+                            @php
+                                $prefix = $spref;
+                                // Keep camaba prefix as is, don't change to mahasiswa
+                            @endphp
+
+                            <a href="{{ route($prefix.'profile-render') }}" class="dropdown-item">
+
                                 <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-inline me-1" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+
                                     <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+
                                     <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+
                                 </svg>
                                 Profil
                             </a>
-
-                            <a href="{{ route('auth.handle-logout') }}" class="dropdown-item">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-inline me-1" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <a href="#" class="dropdown-item"
+                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-inline me-1" width="24" height="24"
+                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                    stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" />
                                     <path d="M9 12h12l-3 -3" />
                                     <path d="M18 15l3 -3" />
                                 </svg>
                                 Keluar
                             </a>
-                            @endauth
 
-                            @guest
-                            <a href="{{ route('auth.render-signin') }}" class="dropdown-item">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-inline me-1" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
-                                    <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-                                </svg>
-                                Login
-                            </a>
-                            @endguest
+                            <form id="logout-form" action="{{ route('auth.handle-logout') }}" method="POST" style="display:none;">
+                                @csrf
+                            </form>
                         </div>
                     </div>
+                    @else
+                    <div class="nav-item">
+                        <a href="{{ route('auth.render-signin') }}" class="nav-link d-flex lh-1 p-0 px-2">
+                            <span class="avatar avatar-sm" style="background-image: url({{ asset('storage/images/profile/default.jpg') }})">
+                            </span>
+                            <div class="d-none d-xl-block ps-2">
+                                <div>Login</div>
+                                <div class="mt-1 small text-secondary">Masuk ke Akun</div>
+                            </div>
+                        </a>
+                    </div>
+                    @endif
                 </div>
             </div>
         </header>
@@ -393,7 +591,7 @@
                                 <!-- BEGIN NAVBAR MENU -->
                                 <ul class="navbar-nav">
                                     <li class="nav-item">
-                                        <a class="nav-link" href="./">
+                                        <a class="nav-link" href="{{ route('root.home-index') }}">
                                             <span class="nav-link-icon d-md-none d-lg-inline-block">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
                                                     <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
@@ -417,11 +615,11 @@
                                         <div class="dropdown-menu">
                                             <div class="dropdown-menu-columns">
                                                 <div class="dropdown-menu-column">
-                                                    <a class="dropdown-item" href="/program-studi">Program Studi</a>
-                                                    <a class="dropdown-item" href="/kalender-akademik">Kalender Akademik</a>
-                                                    <a class="dropdown-item" href="/jadwal-kuliah">Jadwal Kuliah</a>
-                                                    <a class="dropdown-item" href="/silabus">Silabus</a>
-                                                    <a class="dropdown-item" href="/e-learning">E-Learning</a>
+                                                    <a class="dropdown-item" href="#" onclick="showDevelopmentMessage(); return false;">Program Studi</a>
+                                                    <a class="dropdown-item" href="#" onclick="showDevelopmentMessage(); return false;">Kalender Akademik</a>
+                                                    <a class="dropdown-item" href="#" onclick="showDevelopmentMessage(); return false;">Jadwal Kuliah</a>
+                                                    <a class="dropdown-item" href="#" onclick="showDevelopmentMessage(); return false;">Silabus</a>
+                                                    <a class="dropdown-item" href="#" onclick="showDevelopmentMessage(); return false;">E-Learning</a>
                                                 </div>
                                             </div>
                                         </div>
@@ -439,10 +637,10 @@
                                             <span class="nav-link-title">Kemahasiswaan</span>
                                         </a>
                                         <div class="dropdown-menu">
-                                            <a class="dropdown-item" href="/organisasi">Organisasi Mahasiswa</a>
-                                            <a class="dropdown-item" href="/beasiswa">Beasiswa</a>
-                                            <a class="dropdown-item" href="/prestasi">Prestasi Mahasiswa</a>
-                                            <a class="dropdown-item" href="/alumni">Alumni</a>
+                                            <a class="dropdown-item" href="#" onclick="showDevelopmentMessage(); return false;">Organisasi Mahasantri</a>
+                                            <a class="dropdown-item" href="#" onclick="showDevelopmentMessage(); return false;">Beasiswa</a>
+                                            <a class="dropdown-item" href="#" onclick="showDevelopmentMessage(); return false;">Prestasi Mahasantri</a>
+                                            <a class="dropdown-item" href="#" onclick="showDevelopmentMessage(); return false;">Alumni</a>
                                         </div>
                                     </li>
                                     <li class="nav-item dropdown">
@@ -461,11 +659,11 @@
                                             <span class="nav-link-title">Institusi</span>
                                         </a>
                                         <div class="dropdown-menu">
-                                            <a class="dropdown-item" href="/profil">Profil</a>
-                                            <a class="dropdown-item" href="/visi-misi">Visi & Misi</a>
-                                            <a class="dropdown-item" href="/struktur-organisasi">Struktur Organisasi</a>
-                                            <a class="dropdown-item" href="/fasilitas">Fasilitas</a>
-                                            <a class="dropdown-item" href="/gallery">Galeri</a>
+                                            <a class="dropdown-item" href="{{ route('root.institution.infinite-scroll') }}#profile">Profil</a>
+                                            <a class="dropdown-item" href="{{ route('root.institution.infinite-scroll') }}#vision-mission">Visi & Misi</a>
+                                            <a class="dropdown-item" href="{{ route('root.institution.infinite-scroll') }}#structure">Struktur Organisasi</a>
+                                            <a class="dropdown-item" href="{{ route('root.institution.infinite-scroll') }}#facilities">Fasilitas</a>
+                                            <a class="dropdown-item" href="{{ route('root.institution.infinite-scroll') }}#gallery">Galeri</a>
                                         </div>
                                     </li>
                                     <li class="nav-item">
@@ -479,23 +677,37 @@
                                             <span class="nav-link-title">Kontak</span>
                                         </a>
                                     </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{{ route('pmb.registration.form') }}">
+                                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
+                                                    <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                                                    <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
+                                                    <path d="M9 9l1 0" />
+                                                    <path d="M9 13l6 0" />
+                                                    <path d="M9 17l6 0" />
+                                                </svg>
+                                            </span>
+                                            <span class="nav-link-title">Pendaftaran</span>
+                                        </a>
+                                    </li>
                                 </ul>
                                 <!-- END NAVBAR MENU -->
                             </div>
                             <div class="col col-md-auto">
                                 <ul class="navbar-nav">
                                     <li class="nav-item">
-                                        <a class="nav-link" href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSettings">
-                                            <span class="badge badge-sm bg-red text-red-fg">New</span>
-                                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <!-- <a class="nav-link" href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSettings"> -->
+                                            <!-- <span class="badge badge-sm bg-red text-red-fg">New</span>
+                                            <span class="nav-link-icon d-md-none d-lg-inline-block"> -->
                                                 <!-- Download SVG icon from http://tabler.io/icons/icon/settings -->
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
+                                                <!-- <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
                                                     <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" />
                                                     <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
                                                 </svg>
                                             </span>
-                                            <span class="nav-link-title"> Settings </span>
-                                        </a>
+                                            <span class="nav-link-title"> Settings </span> -->
+                                        <!-- </a> -->
                                     </li>
                                 </ul>
                             </div>
@@ -519,9 +731,10 @@
 
         </div>
     </div>
+    <!-- Theme Builder - Commented Out -->
+    <!--
     <div class="settings">
         <a href="#" class="btn btn-floating btn-icon btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSettings" aria-controls="offcanvasSettings" aria-label="Theme Builder">
-            <!-- Download SVG icon from http://tabler.io/icons/icon/brush -->
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
                 <path d="M3 21v-4a4 4 0 1 1 4 4h-4" />
                 <path d="M21 3a16 16 0 0 0 -12.8 10.2" />
@@ -556,6 +769,12 @@
                         <label class="form-label">Color scheme</label>
                         <p class="form-hint">The perfect color mode for your app.</p>
                         <div class="row g-2">
+                            <div class="col-auto">
+                                <label class="form-colorinput">
+                                    <input name="theme-primary" type="radio" value="teal" class="form-colorinput-input" checked />
+                                    <span class="form-colorinput-color bg-teal"></span>
+                                </label>
+                            </div>
                             <div class="col-auto">
                                 <label class="form-colorinput">
                                     <input name="theme-primary" type="radio" value="blue" class="form-colorinput-input" />
@@ -614,12 +833,6 @@
                                 <label class="form-colorinput">
                                     <input name="theme-primary" type="radio" value="green" class="form-colorinput-input" />
                                     <span class="form-colorinput-color bg-green"></span>
-                                </label>
-                            </div>
-                            <div class="col-auto">
-                                <label class="form-colorinput">
-                                    <input name="theme-primary" type="radio" value="teal" class="form-colorinput-input" />
-                                    <span class="form-colorinput-color bg-teal"></span>
                                 </label>
                             </div>
                             <div class="col-auto">
@@ -735,14 +948,12 @@
                 </div>
                 <div class="mt-auto space-y">
                     <button type="button" class="btn w-100" id="reset-changes">
-                        <!-- Download SVG icon from http://tabler.io/icons/icon/rotate -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
                             <path d="M19.95 11a8 8 0 1 0 -.5 4m.5 5v-5h-5" />
                         </svg>
                         Reset changes
                     </button>
                     <a href="#" class="btn btn-primary w-100" data-bs-dismiss="offcanvas">
-                        <!-- Download SVG icon from http://tabler.io/icons/icon/settings -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
                             <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" />
                             <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
@@ -753,6 +964,7 @@
             </div>
         </form>
     </div>
+    -->
     <!-- BEGIN GLOBAL MANDATORY SCRIPTS -->
     <script src="{{ asset('dashboard') }}/dist/js/tabler.min.js?1747482943" defer></script>
     <!-- END GLOBAL MANDATORY SCRIPTS -->
@@ -767,7 +979,7 @@
                 theme: "light",
                 "theme-base": "gray",
                 "theme-font": "sans-serif",
-                "theme-primary": "blue",
+                "theme-primary": "teal",
                 "theme-radius": "1",
             };
             var url = new URL(window.location);
@@ -810,6 +1022,10 @@
                 window.history.pushState({}, "", url);
             });
             checkItems();
+            
+            // Auto-apply teal theme on page load
+            document.documentElement.setAttribute("data-bs-theme-primary", "teal");
+            window.localStorage.setItem("tabler-theme-primary", "teal");
         });
     </script>
     <!-- END PAGE SCRIPTS -->
@@ -890,23 +1106,23 @@
                 </div>
                 <div class="col-sm-6 col-lg-2">
                     <h4 class="h5 mb-4">Link Cepat</h4>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><a href="#" class="link-secondary">Tentang Kami</a></li>
-                        <li class="mb-2"><a href="#" class="link-secondary">Program Studi</a></li>
-                        <li class="mb-2"><a href="#" class="link-secondary">Pendaftaran</a></li>
-                        <li class="mb-2"><a href="#" class="link-secondary">Beasiswa</a></li>
-                        <li class="mb-2"><a href="#" class="link-secondary">Kalender Akademik</a></li>
-                    </ul>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2"><a href="#" onclick="showDevelopmentMessage(); return false;" class="link-secondary">Tentang Kami</a></li>
+                                        <li class="mb-2"><a href="#" onclick="showDevelopmentMessage(); return false;" class="link-secondary">Program Studi</a></li>
+                                        <li class="mb-2"><a href="{{ route('pmb.registration.form') }}" class="link-secondary">Pendaftaran</a></li>
+                                        <li class="mb-2"><a href="#" onclick="showDevelopmentMessage(); return false;" class="link-secondary">Beasiswa</a></li>
+                                        <li class="mb-2"><a href="#" onclick="showDevelopmentMessage(); return false;" class="link-secondary">Kalender Akademik</a></li>
+                                    </ul>
                 </div>
                 <div class="col-sm-6 col-lg-2">
-                    <h4 class="h5 mb-4">Mahasiswa</h4>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><a href="#" class="link-secondary">SIAKAD</a></li>
-                        <li class="mb-2"><a href="#" class="link-secondary">E-Learning</a></li>
-                        <li class="mb-2"><a href="#" class="link-secondary">Perpustakaan</a></li>
-                        <li class="mb-2"><a href="#" class="link-secondary">Laboratorium</a></li>
-                        <li class="mb-2"><a href="#" class="link-secondary">Kemahasiswaan</a></li>
-                    </ul>
+                    <h4 class="h5 mb-4">Mahasantri</h4>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2"><a href="/siakad" class="link-secondary">SIAKAD</a></li>
+                                        <li class="mb-2"><a href="#" onclick="showDevelopmentMessage(); return false;" class="link-secondary">E-Learning</a></li>
+                                        <li class="mb-2"><a href="#" onclick="showDevelopmentMessage(); return false;" class="link-secondary">Perpustakaan</a></li>
+                                        <li class="mb-2"><a href="#" onclick="showDevelopmentMessage(); return false;" class="link-secondary">Laboratorium</a></li>
+                                        <li class="mb-2"><a href="#" onclick="showDevelopmentMessage(); return false;" class="link-secondary">Kemahasiswaan</a></li>
+                                    </ul>
                 </div>
                 <div class="col-lg-4">
                     <h4 class="h5 mb-4">Kontak</h4>
@@ -983,6 +1199,22 @@
             // Reset form
             event.target.reset();
             toggleChatPopup();
+        }
+
+        function showDevelopmentMessage() {
+            // Check if SweetAlert is available
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Fitur Sedang Dalam Pengembangan',
+                    text: 'Maaf, fitur ini sedang dalam tahap pengembangan dan akan segera tersedia.',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#0d9488'
+                });
+            } else {
+                // Fallback to native alert if SweetAlert is not available
+                alert('Fitur sedang dalam pengembangan.\n\nMaaf, fitur ini sedang dalam tahap pengembangan dan akan segera tersedia.');
+            }
         }
     </script>
 

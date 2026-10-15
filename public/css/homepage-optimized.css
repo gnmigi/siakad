@@ -1,0 +1,265 @@
+/* Homepage Optimized CSS - Critical Path Optimization */
+
+/* Critical Above-the-fold Styles */
+.hero-section {
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.25), rgba(45, 212, 191, 0.9));
+    background-size: cover;
+    background-attachment: scroll;
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    border-radius: 0 0 3rem 3rem;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.3) 100%);
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeInUp 1s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Performance Optimized Button Styles */
+.hero-section .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-radius: 0.75rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    min-width: 140px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    will-change: transform;
+}
+
+.hero-section .btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Floating Stats Optimization */
+.floating-stats {
+    background: var(--tblr-card-bg);
+    border: 1px solid var(--tblr-border-color);
+    border-radius: 1.5rem;
+    padding: 2.5rem;
+    margin-top: -7rem;
+    position: relative;
+    z-index: 3;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    transition: transform 0.3s ease;
+}
+
+/* Feature Cards Optimization */
+.feature-card {
+    border: none;
+    border-radius: 1.5rem;
+    transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    overflow: hidden;
+    background: var(--tblr-card-bg);
+    position: relative;
+    opacity: 0;
+    transform: translateY(30px);
+    will-change: transform, opacity;
+}
+
+.feature-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+}
+
+/* News Cards Optimization */
+.news-card {
+    border: none;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    opacity: 0;
+    transform: translateY(30px);
+    will-change: transform, opacity;
+}
+
+.news-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.news-card img {
+    transition: transform 0.3s ease;
+    height: 200px;
+    object-fit: cover;
+    width: 100%;
+}
+
+.news-card:hover img {
+    transform: scale(1.05);
+}
+
+/* Mobile Responsive Improvements */
+@media (max-width: 768px) {
+    .hero-section {
+        min-height: 70vh;
+        padding: 2rem 0;
+    }
+    
+    .floating-stats {
+        margin-top: -4rem;
+        padding: 1.5rem;
+    }
+    
+    .news-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .news-card img {
+        height: 180px;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-section {
+        min-height: 60vh;
+    }
+    
+    .floating-stats {
+        margin-top: -2rem;
+        padding: 1rem;
+    }
+    
+    .news-card img {
+        height: 160px;
+    }
+}
+
+/* Gallery Slider Optimization */
+.gallery-slider, .program-slider {
+    position: relative;
+    overflow: hidden;
+}
+
+.gallery-track, .program-track {
+    display: flex;
+    transition: transform 0.3s ease;
+    will-change: transform;
+}
+
+.gallery-item, .program-item {
+    flex: 0 0 auto;
+    width: 100%;
+    padding: 0 0.5rem;
+}
+
+@media (min-width: 768px) {
+    .gallery-item, .program-item {
+        width: 50%;
+    }
+}
+
+@media (min-width: 992px) {
+    .gallery-item, .program-item {
+        width: 33.333%;
+    }
+}
+
+/* CTA Section Optimization */
+.cta-section {
+    background: linear-gradient(135deg, var(--tblr-primary), #14b8a6);
+    border-radius: 2rem;
+    padding: 5rem 3rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(13, 148, 136, 0.3);
+}
+
+/* Achievement Counter */
+.achievement-counter {
+    font-size: 3rem;
+    font-weight: bold;
+    color: var(--tblr-primary);
+    margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .achievement-counter {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .achievement-counter {
+        font-size: 1.5rem;
+    }
+}
+
+/* Lazy Loading Optimization */
+.lazy-load {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.lazy-load.loaded {
+    opacity: 1;
+}
+
+/* Preload Critical Images */
+.hero-section {
+    background-image: url('https://images.unsplash.com/photo-1576495199011-eb94736d05d6?q=80&w=2072&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus Styles for Better Accessibility */
+.btn:focus,
+.nav-link:focus,
+a:focus {
+    outline: 2px solid var(--tblr-primary);
+    outline-offset: 2px;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .hero-section {
+        background: #000;
+        color: #fff;
+    }
+    
+    .btn {
+        border: 2px solid currentColor;
+    }
+}

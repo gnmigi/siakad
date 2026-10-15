@@ -31,6 +31,6 @@ return [
     |
     */
     'error_messages' => [
-        'turnstile_check_message' => 'The CAPTCHA thinks you are a robot! Please refresh and try again.',
+        'turnstile_check_message' => 'Verifikasi captcha gagal. Silakan refresh halaman dan coba lagi.',
     ],
 ];

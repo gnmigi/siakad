@@ -1,0 +1,37 @@
+/* Fix for payment status button visibility */
+.action-btn.secondary {
+    background: #f8f9fa !important;
+    color: #495057 !important;
+    border: 2px solid #dee2e6 !important;
+    font-weight: 600 !important;
+}
+
+.action-btn.secondary:hover {
+    background: #e9ecef !important;
+    color: #212529 !important;
+    border-color: #adb5bd !important;
+}
+
+/* Dark mode support */
+[data-bs-theme="dark"] .action-btn.secondary {
+    background: #4b5563 !important;
+    color: white !important;
+    border-color: #6b7280 !important;
+}
+
+[data-bs-theme="dark"] .action-btn.secondary:hover {
+    background: #6b7280 !important;
+    color: white !important;
+    border-color: #9ca3af !important;
+}
+
+/* Additional button fixes */
+.action-btn {
+    text-decoration: none !important;
+}
+
+.action-btn:focus,
+.action-btn:active {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+}

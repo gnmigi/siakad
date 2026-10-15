@@ -31,8 +31,8 @@
                             <thead>
                                 <tr>
                                     <th class="text-center">#</th>
-                                    <th class="text-center">NIM Mahasiswa</th>
-                                    <th class="text-center">Nama Mahasiswa</th>
+                                    <th class="text-center">NIM Mahasantri</th>
+                                    <th class="text-center">Nama Mahasantri</th>
                                     <th class="text-center">Status</th>
                                     <th class="text-center">Button</th>
                                 </tr>
@@ -41,8 +41,8 @@
                                 @foreach ($absen as $key => $item)
                                     <tr>
                                         <td data-label="Number">{{ ++$key }}</td>
-                                        <td data-label="NIM Mahasiswa">{{ $item->mahasiswa->mhs_nim }}</td>
-                                        <td data-label="Nama Mahasiswa">{{ $item->mahasiswa->mhs_name }}</td>
+                                        <td data-label="NIM Mahasantri">{{ $item->mahasiswa->mhs_nim }}</td>
+                                        <td data-label="Nama Mahasantri">{{ $item->mahasiswa->mhs_name }}</td>
                                         <td data-label="Status">
                                             {{ $item->absen_type }}
                                         </td>

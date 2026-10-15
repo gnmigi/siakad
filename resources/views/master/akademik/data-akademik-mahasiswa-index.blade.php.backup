@@ -1,0 +1,1246 @@
+@extends('core-themes.core-backpage')
+
+@section('custom-css')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <style>
+        /* Stats cards */
+        .bg-light-primary {
+            background-color: rgba(67, 94, 190, 0.1);
+        }
+        
+        .bg-light-success {
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+        
+        .bg-light-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+        
+        .bg-light-info {
+            background-color: rgba(23, 162, 184, 0.1);
+        }
+
+        /* Card styling */
+        .card {
+            border: none;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            border-radius: 10px;
+        }
+
+        .card-header {
+            background: none;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 1.5rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Table styling */
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            border-top: none;
+            border-bottom: 2px solid rgba(0,0,0,0.05);
+            font-weight: 600;
+            color: #6c757d;
+            padding-top: 1rem;
+            padding-bottom: 0.75rem;
+            text-align: left;
+        }
+
+        .table td {
+            vertical-align: middle;
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
+            text-align: left;
+        }
+
+        .table th.text-center, .table td.text-center {
+            text-align: center !important;
+        }
+
+        /* Button styling */
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+        }
+
+        /* Form styling */
+        .form-control, .form-select {
+            border-radius: 5px;
+            border: 1px solid rgba(0,0,0,0.1);
+            padding: 0.5rem 1rem;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #435ebe;
+            box-shadow: 0 0 0 0.2rem rgba(67, 94, 190, 0.25);
+        }
+
+        /* Badge styling */
+        .badge {
+            padding: 0.5em 0.75em;
+            font-weight: 500;
+        }
+
+        /* Responsive styling */
+        @media (max-width: 768px) {
+            .table-responsive table,
+            .table-responsive thead,
+            .table-responsive tbody,
+            .table-responsive th,
+            .table-responsive td,
+            .table-responsive tr {
+                display: block;
+                width: 100%;
+            }
+            .table-responsive thead {
+                display: none;
+            }
+            .table-responsive tr {
+                margin-bottom: 1rem;
+                border-bottom: 2px solid #eee;
+            }
+            .table-responsive td {
+                position: relative;
+                padding-left: 50%;
+                text-align: left !important;
+                border: none;
+                border-bottom: 1px solid #eee;
+            }
+            .table-responsive td:before {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 48%;
+                padding-left: 1rem;
+                white-space: nowrap;
+                font-weight: bold;
+                color: #888;
+                content: attr(data-label);
+            }
+        }
+    </style>
+@endsection
+
+@section('content')
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-9 col-12 mb-2">
+            <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">{{ $pages }}</h5>
+                        <div>
+                            <a href="{{ route($spref . 'akademik.data-akademik-mahasiswa-export', array_merge(request()->all(), ['format' => 'excel'])) }}" class="btn btn-success me-2" title="Export Excel">
+                                <i class="fas fa-file-excel"></i> Export Excel
+                            </a>
+                            <a href="{{ route($spref . 'akademik.data-akademik-mahasiswa-export', array_merge(request()->all(), ['format' => 'pdf'])) }}" class="btn btn-danger me-2" title="Export PDF">
+                                <i class="fas fa-file-pdf"></i> Export PDF
+                            </a>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal" title="Import Excel">
+                                <i class="fas fa-file-import"></i> Import Excel
+                            </button>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="{{ route($spref . 'akademik.data-akademik-mahasiswa-import') }}" method="POST" enctype="multipart/form-data" id="importForm">
+                @csrf
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="importModalLabel">Import Data Mahasantri (Excel)</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="import_file" class="form-label">Pilih file Excel (.xlsx)</label>
+                            <input class="form-control" type="file" id="import_file" name="import_file" accept=".xlsx" required>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="1" id="replace_existing" name="replace_existing">
+                            <label class="form-check-label" for="replace_existing">
+                                Ganti data yang sudah ada jika ditemukan duplikat (berdasarkan nama, email, atau NIM)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary" id="importBtn">Import</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Import Progress Modal -->
+    <div class="modal fade" id="importProgressModal" tabindex="-1" aria-labelledby="importProgressModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importProgressModalLabel">
+                        <i class="fas fa-upload me-2"></i>Sedang Mengimport Data Excel
+                    </h5>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="mb-4">
+                        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                             style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="importProgressBar">
+                            <span id="importProgressText">0%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-3">
+                            <div class="bg-light-success p-2 rounded">
+                                <i class="fas fa-check-circle text-success"></i>
+                                <div class="fw-bold" id="importedCount">0</div>
+                                <small class="text-muted">Berhasil</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="bg-light-warning p-2 rounded">
+                                <i class="fas fa-skip-forward text-warning"></i>
+                                <div class="fw-bold" id="skippedCount">0</div>
+                                <small class="text-muted">Dilewati</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="bg-light-info p-2 rounded">
+                                <i class="fas fa-sync-alt text-info"></i>
+                                <div class="fw-bold" id="updatedCount">0</div>
+                                <small class="text-muted">Diperbarui</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="bg-light-danger p-2 rounded">
+                                <i class="fas fa-times-circle text-danger"></i>
+                                <div class="fw-bold" id="failedCount">0</div>
+                                <small class="text-muted">Gagal</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <p class="mb-1"><strong>Status:</strong> <span id="importStatus">Memulai proses import...</span></p>
+                        <p class="mb-0"><small class="text-muted" id="importDetail">Mohon tunggu, jangan tutup halaman ini.</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+                    <div class="card-body">
+                        <!-- Filter Section -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-filter me-2"></i>Filter & Pencarian Data
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <form method="GET" action="{{ route($spref . 'akademik.data-akademik-mahasiswa-render') }}" id="filterForm">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label for="search" class="form-label">Pencarian</label>
+                                            <input type="text" class="form-control" id="search" name="search" 
+                                                   value="{{ $current_filters['search'] ?? '' }}" 
+                                                   placeholder="Nama, Email, atau NIM...">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="prodi_filter" class="form-label">Program Studi</label>
+                                            <select class="form-select" id="prodi_filter" name="prodi_filter">
+                                                <option value="">Semua Program Studi</option>
+                                                @foreach ($program_studi as $prodi)
+                                                    <option value="{{ $prodi->id }}" 
+                                                        {{ ($current_filters['prodi_filter'] ?? '') == $prodi->id ? 'selected' : '' }}>
+                                                        {{ $prodi->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="kelas_filter" class="form-label">Kelas</label>
+                                            <select class="form-select" id="kelas_filter" name="kelas_filter">
+                                                <option value="">Semua Kelas</option>
+                                                @foreach ($kelas as $k)
+                                                    <option value="{{ $k->id }}" 
+                                                        {{ ($current_filters['kelas_filter'] ?? '') == $k->id ? 'selected' : '' }}>
+                                                        {{ $k->name }} - {{ $k->jenisKelas->name ?? 'Reguler' }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="semester_filter" class="form-label">Semester</label>
+                                            <select class="form-select" id="semester_filter" name="semester_filter">
+                                                <option value="">Semua Semester</option>
+                                                @foreach ($semester_list as $semester)
+                                                    <option value="{{ $semester }}" 
+                                                        {{ ($current_filters['semester_filter'] ?? '') == $semester ? 'selected' : '' }}>
+                                                        Semester {{ $semester }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="takhasus_filter" class="form-label">Takhasus</label>
+                                            <select class="form-select" id="takhasus_filter" name="takhasus_filter">
+                                                <option value="">Semua Takhasus</option>
+                                                @foreach ($takhasus_list as $takhasus)
+                                                    <option value="{{ $takhasus }}" 
+                                                        {{ ($current_filters['takhasus_filter'] ?? '') == $takhasus ? 'selected' : '' }}>
+                                                        {{ $takhasus }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2 d-flex align-items-end">
+                                            <div class="btn-group w-100" role="group">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-search me-1"></i>Filter
+                                                </button>
+                                                <a href="{{ route($spref . 'akademik.data-akademik-mahasiswa-render') }}" class="btn btn-outline-secondary">
+                                                    <i class="fas fa-times me-1"></i>Reset
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                    <!-- Quick Stats -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 mb-2">
+                            <div class="p-3 bg-light-primary rounded">
+                                <h6 class="mb-2">Total Mahasantri</h6>
+                                <h3 class="mb-0">{{ count($mahasiswa) }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <div class="p-3 bg-light-success rounded">
+                                <h6 class="mb-2">Sudah Ada NIM</h6>
+                                <h3 class="mb-0">{{ $mahasiswa->whereNotNull('numb_nim')->count() }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <div class="p-3 bg-light-warning rounded">
+                                <h6 class="mb-2">Belum Ada NIM</h6>
+                                <h3 class="mb-0">{{ $mahasiswa->whereNull('numb_nim')->count() }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <div class="p-3 bg-light-info rounded">
+                                <h6 class="mb-2">Sudah Ada Kelas</h6>
+                                <h3 class="mb-0">{{ $mahasiswa->whereNotNull('kelas_id')->count() }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Table -->
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">No</th>
+                                    <th>Nama Mahasantri</th>
+                                    <th>NIM</th>
+                                    <th>Program Studi</th>
+                                    <th>Kelas</th>
+                                    <th>Semester</th>
+                                    <th>Takhasus</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($mahasiswa as $key => $item)
+                                    <tr>
+                                        <td data-label="No">{{ ++$key }}</td>
+                                        <td data-label="Nama Mahasantri">
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ $item->photo }}" alt="{{ $item->name }}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #e9ecef;">
+                                                <div>
+                                                    <span class="fw-bold">{{ $item->name }}</span>
+                                                    <br>
+                                                    <small class="text-muted">{{ $item->email }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td data-label="NIM">
+                                            @if($item->numb_nim)
+                                                <span class="badge bg-light-success text-success">{{ $item->numb_nim }}</span>
+                                            @else
+                                                <span class="badge bg-light-warning text-warning">Belum Ada</span>
+                                            @endif
+                                        </td>
+                                        <td data-label="Program Studi">{{ $item->prodi->name ?? '-' }}</td>
+                                        <td data-label="Kelas">
+                                            @if($item->kelas)
+                                                {{ $item->kelas->name }} - {{ $item->kelas->jenisKelas->name ?? 'Reguler' }}
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                        <td data-label="Semester">{{ $item->semester ?? '-' }}</td>
+                                        <td data-label="Takhasus">{{ $item->takhasusOption->name ?? $item->takhasus ?? '-' }}</td>
+                                        <td data-label="Status" class="text-center">
+                                            {!! $item->getTerminalStatusBadge() !!}
+                                            @if($item->isTerminal())
+                                                <div class="mt-1">
+                                                    <small class="text-muted" title="Terminal sejak: {{ $item->terminal_date ? $item->terminal_date->format('d/m/Y H:i') : '-' }}">
+                                                        <i class="fas fa-clock me-1"></i>{{ $item->terminal_date ? $item->terminal_date->format('d/m/Y') : '-' }}
+                                                    </small>
+                                                </div>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group" role="group">
+                                                <a href="#" data-bs-toggle="modal" data-bs-target="#editData{{ $item->code }}" class="btn btn-sm btn-primary" title="Edit Data Akademik">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="#" data-bs-toggle="modal" data-bs-target="#editProfileData{{ $item->code }}" class="btn btn-sm btn-success" title="Edit Profile Lengkap">
+                                                    <i class="fas fa-user-edit"></i>
+                                                </a>
+                                                @if($item->isTerminal())
+                                                    <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#terminalModal{{ $item->code }}" title="Nonaktifkan Terminal">
+                                                        <i class="fas fa-unlock"></i>
+                                                    </button>
+                                                @else
+                                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#terminalModal{{ $item->code }}" title="Aktifkan Terminal">
+                                                        <i class="fas fa-ban"></i>
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar Content -->
+        <div class="col-lg-3 col-12 mb-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Informasi</h5>
+                </div>
+                <div class="card-body">
+                    <p>Bagian ini untuk mengelola data akademik mahasiswa seperti NIM, Program Studi, Kelas, dan Semester.</p>
+                    
+                    <div class="alert alert-light-info">
+                        <h6 class="">Petunjuk:</h6>
+                        <ul class="mb-0">
+                            <li>Klik ikon <i class="fas fa-edit"></i> untuk mengedit data akademik mahasiswa</li>
+                            <li>Data login mahasiswa dikelola di Master Pengguna</li>
+                            <li>Data akademik hanya bisa diubah oleh admin</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modals -->
+    @foreach ($mahasiswa as $item)
+        <div class="modal fade" id="editProfileData{{ $item->code }}" tabindex="-1" role="dialog" aria-labelledby="editProfileModalLabel{{ $item->code }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+                <div class="modal-content">
+                    <form action="{{ route($spref . 'akademik.data-akademik-mahasiswa-profile-update', $item->code) }}" method="POST" enctype="multipart/form-data">
+                        @method('patch')
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editProfileModalLabel{{ $item->code }}">Edit Profile Lengkap - {{ $item->name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                            <div class="row">
+                                <!-- Data Pribadi -->
+                                <div class="col-12 mb-4">
+                                    <h6 class="text-primary border-bottom pb-2"><i class="fas fa-user me-2"></i>Data Pribadi</h6>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_name{{ $item->code }}" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="name" id="profile_name{{ $item->code }}" value="{{ $item->name }}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_email{{ $item->code }}" class="form-label">Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" name="email" id="profile_email{{ $item->code }}" value="{{ $item->email }}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_phone{{ $item->code }}" class="form-label">No. Telepon <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="phone" id="profile_phone{{ $item->code }}" value="{{ $item->phone }}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_bio_gender{{ $item->code }}" class="form-label">Jenis Kelamin</label>
+                                    <select class="form-select" name="bio_gender" id="profile_bio_gender{{ $item->code }}">
+                                        <option value="">Pilih Jenis Kelamin</option>
+                                        <option value="Laki-laki" {{ $item->bio_gender == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                                        <option value="Perempuan" {{ $item->bio_gender == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_bio_placebirth{{ $item->code }}" class="form-label">Tempat Lahir</label>
+                                    <input type="text" class="form-control" name="bio_placebirth" id="profile_bio_placebirth{{ $item->code }}" value="{{ $item->bio_placebirth }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_bio_datebirth{{ $item->code }}" class="form-label">Tanggal Lahir</label>
+                                    <input type="date" class="form-control" name="bio_datebirth" id="profile_bio_datebirth{{ $item->code }}" value="{{ $item->bio_datebirth }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_bio_religion{{ $item->code }}" class="form-label">Agama</label>
+                                    <select class="form-select" name="bio_religion" id="profile_bio_religion{{ $item->code }}">
+                                        <option value="">Pilih Agama</option>
+                                        <option value="Islam" {{ $item->bio_religion == 'Islam' ? 'selected' : '' }}>Islam</option>
+                                        <option value="Kristen" {{ $item->bio_religion == 'Kristen' ? 'selected' : '' }}>Kristen</option>
+                                        <option value="Katolik" {{ $item->bio_religion == 'Katolik' ? 'selected' : '' }}>Katolik</option>
+                                        <option value="Hindu" {{ $item->bio_religion == 'Hindu' ? 'selected' : '' }}>Hindu</option>
+                                        <option value="Buddha" {{ $item->bio_religion == 'Buddha' ? 'selected' : '' }}>Buddha</option>
+                                        <option value="Konghucu" {{ $item->bio_religion == 'Konghucu' ? 'selected' : '' }}>Konghucu</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_bio_nationality{{ $item->code }}" class="form-label">Kewarganegaraan</label>
+                                    <input type="text" class="form-control" name="bio_nationality" id="profile_bio_nationality{{ $item->code }}" value="{{ $item->bio_nationality ?? 'Indonesia' }}">
+                                </div>
+
+                                <!-- Nomor Identitas -->
+                                <div class="col-12 mb-4 mt-4">
+                                    <h6 class="text-primary border-bottom pb-2"><i class="fas fa-id-card me-2"></i>Nomor Identitas</h6>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_numb_ktp{{ $item->code }}" class="form-label">No. KTP/NIK</label>
+                                    <input type="text" class="form-control" name="numb_ktp" id="profile_numb_ktp{{ $item->code }}" value="{{ $item->numb_ktp }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_numb_kk{{ $item->code }}" class="form-label">No. Kartu Keluarga</label>
+                                    <input type="text" class="form-control" name="numb_kk" id="profile_numb_kk{{ $item->code }}" value="{{ $item->numb_kk }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_numb_nisn{{ $item->code }}" class="form-label">NISN</label>
+                                    <input type="text" class="form-control" name="numb_nisn" id="profile_numb_nisn{{ $item->code }}" value="{{ $item->numb_nisn }}">
+                                </div>
+
+                                <!-- Alamat KTP -->
+                                <div class="col-12 mb-4 mt-4">
+                                    <h6 class="text-primary border-bottom pb-2"><i class="fas fa-home me-2"></i>Alamat Sesuai KTP</h6>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label for="profile_ktp_addres{{ $item->code }}" class="form-label">Alamat Lengkap</label>
+                                    <textarea class="form-control" name="ktp_addres" id="profile_ktp_addres{{ $item->code }}" rows="3">{{ $item->ktp_addres }}</textarea>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="profile_ktp_rt{{ $item->code }}" class="form-label">RT</label>
+                                    <input type="text" class="form-control" name="ktp_rt" id="profile_ktp_rt{{ $item->code }}" value="{{ $item->ktp_rt }}">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="profile_ktp_rw{{ $item->code }}" class="form-label">RW</label>
+                                    <input type="text" class="form-control" name="ktp_rw" id="profile_ktp_rw{{ $item->code }}" value="{{ $item->ktp_rw }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_ktp_village{{ $item->code }}" class="form-label">Kelurahan/Desa</label>
+                                    <input type="text" class="form-control" name="ktp_village" id="profile_ktp_village{{ $item->code }}" value="{{ $item->ktp_village }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_ktp_subdistrict{{ $item->code }}" class="form-label">Kecamatan</label>
+                                    <input type="text" class="form-control" name="ktp_subdistrict" id="profile_ktp_subdistrict{{ $item->code }}" value="{{ $item->ktp_subdistrict }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_ktp_city{{ $item->code }}" class="form-label">Kota/Kabupaten</label>
+                                    <input type="text" class="form-control" name="ktp_city" id="profile_ktp_city{{ $item->code }}" value="{{ $item->ktp_city }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_ktp_province{{ $item->code }}" class="form-label">Provinsi</label>
+                                    <input type="text" class="form-control" name="ktp_province" id="profile_ktp_province{{ $item->code }}" value="{{ $item->ktp_province }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_ktp_poscode{{ $item->code }}" class="form-label">Kode Pos</label>
+                                    <input type="text" class="form-control" name="ktp_poscode" id="profile_ktp_poscode{{ $item->code }}" value="{{ $item->ktp_poscode }}">
+                                </div>
+
+                                <!-- Data Orang Tua -->
+                                <div class="col-12 mb-4 mt-4">
+                                    <h6 class="text-primary border-bottom pb-2"><i class="fas fa-users me-2"></i>Data Orang Tua</h6>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_father_name{{ $item->code }}" class="form-label">Nama Ayah</label>
+                                    <input type="text" class="form-control" name="father_name" id="profile_father_name{{ $item->code }}" value="{{ $item->father_name }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_mother_name{{ $item->code }}" class="form-label">Nama Ibu</label>
+                                    <input type="text" class="form-control" name="mother_name" id="profile_mother_name{{ $item->code }}" value="{{ $item->mother_name }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_father_phone{{ $item->code }}" class="form-label">No. Telepon Ayah</label>
+                                    <input type="text" class="form-control" name="father_phone" id="profile_father_phone{{ $item->code }}" value="{{ $item->father_phone }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_mother_phone{{ $item->code }}" class="form-label">No. Telepon Ibu</label>
+                                    <input type="text" class="form-control" name="mother_phone" id="profile_mother_phone{{ $item->code }}" value="{{ $item->mother_phone }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_father_occupation{{ $item->code }}" class="form-label">Pekerjaan Ayah</label>
+                                    <input type="text" class="form-control" name="father_occupation" id="profile_father_occupation{{ $item->code }}" value="{{ $item->father_occupation }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_mother_occupation{{ $item->code }}" class="form-label">Pekerjaan Ibu</label>
+                                    <input type="text" class="form-control" name="mother_occupation" id="profile_mother_occupation{{ $item->code }}" value="{{ $item->mother_occupation }}">
+                                </div>
+
+                                <!-- Pendidikan Terakhir -->
+                                <div class="col-12 mb-4 mt-4">
+                                    <h6 class="text-primary border-bottom pb-2"><i class="fas fa-graduation-cap me-2"></i>Pendidikan Terakhir</h6>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_edu1_type{{ $item->code }}" class="form-label">Jenjang Pendidikan</label>
+                                    <select class="form-select" name="edu1_type" id="profile_edu1_type{{ $item->code }}">
+                                        <option value="SMA/SMK" {{ $item->edu1_type == 'SMA/SMK' ? 'selected' : '' }}>SMA/SMK</option>
+                                        <option value="Diploma" {{ $item->edu1_type == 'Diploma' ? 'selected' : '' }}>Diploma</option>
+                                        <option value="Sarjana" {{ $item->edu1_type == 'Sarjana' ? 'selected' : '' }}>Sarjana</option>
+                                        <option value="Magister" {{ $item->edu1_type == 'Magister' ? 'selected' : '' }}>Magister</option>
+                                        <option value="Doktor" {{ $item->edu1_type == 'Doktor' ? 'selected' : '' }}>Doktor</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_edu1_place{{ $item->code }}" class="form-label">Nama Sekolah/Universitas</label>
+                                    <input type="text" class="form-control" name="edu1_place" id="profile_edu1_place{{ $item->code }}" value="{{ $item->edu1_place }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_edu1_major{{ $item->code }}" class="form-label">Jurusan</label>
+                                    <input type="text" class="form-control" name="edu1_major" id="profile_edu1_major{{ $item->code }}" value="{{ $item->edu1_major }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="profile_edu1_graduate_year{{ $item->code }}" class="form-label">Tahun Lulus</label>
+                                    <input type="text" class="form-control" name="edu1_graduate_year" id="profile_edu1_graduate_year{{ $item->code }}" value="{{ $item->edu1_graduate_year }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i> Simpan Profile
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
+
+    <!-- Edit Academic Modals -->
+    @foreach ($mahasiswa as $item)
+        <div class="modal fade" id="editData{{ $item->code }}" tabindex="-1" role="dialog" aria-labelledby="editModalLabel{{ $item->code }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content">
+                    <form action="{{ route($spref . 'akademik.data-akademik-mahasiswa-update', $item->code) }}" method="POST">
+                        @method('patch')
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editModalLabel{{ $item->code }}">Edit Data Akademik - {{ $item->name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="edit_numb_nim{{ $item->code }}" class="form-label">NIM <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="numb_nim" id="edit_numb_nim{{ $item->code }}" value="{{ $item->numb_nim }}" placeholder="Contoh: 2024001001">
+                                    @error('numb_nim')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="edit_prodi_id{{ $item->code }}" class="form-label">Program Studi <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="prodi_id" id="edit_prodi_id{{ $item->code }}">
+                                        <option value="">Pilih Program Studi</option>
+                                        @foreach ($program_studi as $p)
+                                            <option value="{{ $p->id }}" {{ $item->prodi_id == $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('prodi_id')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="edit_kelas_id{{ $item->code }}" class="form-label">Kelas <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="kelas_id" id="edit_kelas_id{{ $item->code }}">
+                                        <option value="">Pilih Kelas</option>
+                                        @foreach ($kelas as $k)
+                                            <option value="{{ $k->id }}" {{ $item->kelas_id == $k->id ? 'selected' : '' }}>{{ $k->name }} - {{ $k->jenisKelas->name ?? 'Reguler' }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('kelas_id')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="edit_semester{{ $item->code }}" class="form-label">Semester <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" name="semester" id="edit_semester{{ $item->code }}" min="1" max="14" value="{{ $item->semester }}" placeholder="Contoh: 1">
+                                    @error('semester')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label for="edit_takhasus_id{{ $item->code }}" class="form-label">Takhasus (Opsional)</label>
+                                    <select class="form-select" name="takhasus_id" id="edit_takhasus_id{{ $item->code }}">
+                                        <option value="">Pilih Takhasus</option>
+                                        @if($item->prodi_id)
+                                            @foreach($item->prodi->takhasusOptions ?? [] as $takhasus)
+                                                <option value="{{ $takhasus->id }}" {{ $item->takhasus_id == $takhasus->id ? 'selected' : '' }}>
+                                                    {{ $takhasus->name }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    @error('takhasus_id')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                            <button type="submit" class="btn btn-primary" onclick="return validateForm{{ $item->code }}()">
+                                <i class="fas fa-save me-1"></i> Simpan Perubahan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
+
+    <!-- Terminal Modals -->
+    @foreach ($mahasiswa as $item)
+        <div class="modal fade" id="terminalModal{{ $item->code }}" tabindex="-1" role="dialog" aria-labelledby="terminalModalLabel{{ $item->code }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <form action="{{ route($spref . 'akademik.data-akademik-mahasiswa-terminal-toggle', $item->code) }}" method="POST">
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="terminalModalLabel{{ $item->code }}">
+                                @if($item->isTerminal())
+                                    <i class="fas fa-unlock text-warning me-2"></i>Nonaktifkan Terminal - {{ $item->name }}
+                                @else
+                                    <i class="fas fa-ban text-danger me-2"></i>Aktifkan Terminal - {{ $item->name }}
+                                @endif
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            @if($item->isTerminal())
+                                <!-- Deactivate Terminal -->
+                                <input type="hidden" name="action" value="deactivate">
+                                <div class="alert alert-warning">
+                                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Konfirmasi Nonaktifkan Terminal</h6>
+                                    <p class="mb-2">Anda akan menonaktifkan status terminal untuk mahasiswa <strong>{{ $item->name }}</strong>.</p>
+                                    
+                                    @php $terminalInfo = $item->getTerminalInfo(); @endphp
+                                    @if($terminalInfo)
+                                        <div class="mt-3">
+                                            <h6>Informasi Terminal Saat Ini:</h6>
+                                            <ul class="mb-0">
+                                                <li><strong>Alasan:</strong> {{ $terminalInfo['reason'] ?? '-' }}</li>
+                                                <li><strong>Tanggal:</strong> {{ $terminalInfo['date'] ?? '-' }}</li>
+                                                <li><strong>Oleh:</strong> {{ $terminalInfo['by'] ?? '-' }}</li>
+                                            </ul>
+                                        </div>
+                                    @endif
+                                </div>
+                                <p>Setelah terminal dinonaktifkan, mahasiswa akan dapat:</p>
+                                <ul>
+                                    <li><i class="fas fa-check text-success me-1"></i> Mengisi KRS (Kartu Rencana Studi)</li>
+                                    <li><i class="fas fa-check text-success me-1"></i> Mengakses KHS (Kartu Hasil Studi)</li>
+                                    <li><i class="fas fa-check text-success me-1"></i> Mengakses semua fitur akademik</li>
+                                </ul>
+                            @else
+                                <!-- Activate Terminal -->
+                                <input type="hidden" name="action" value="activate">
+                                <div class="alert alert-danger">
+                                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Peringatan: Aktifkan Terminal</h6>
+                                    <p class="mb-0">Anda akan mengaktifkan status terminal untuk mahasiswa <strong>{{ $item->name }}</strong>.</p>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="terminal_reason{{ $item->code }}" class="form-label">Alasan Terminal <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" name="terminal_reason" id="terminal_reason{{ $item->code }}" rows="3" placeholder="Masukkan alasan mengapa mahasiswa ini di-terminal..." required></textarea>
+                                    <small class="text-muted">Alasan ini akan dicatat dalam sistem untuk keperluan audit.</small>
+                                </div>
+                                
+                                <p>Setelah terminal diaktifkan, mahasiswa <strong>TIDAK AKAN DAPAT</strong>:</p>
+                                <ul>
+                                    <li><i class="fas fa-times text-danger me-1"></i> Mengisi KRS (Kartu Rencana Studi)</li>
+                                    <li><i class="fas fa-times text-danger me-1"></i> Mengakses KHS (Kartu Hasil Studi)</li>
+                                    <li><i class="fas fa-times text-danger me-1"></i> Mengakses fitur akademik lainnya</li>
+                                </ul>
+                            @endif
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            @if($item->isTerminal())
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-unlock me-1"></i> Nonaktifkan Terminal
+                                </button>
+                            @else
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-ban me-1"></i> Aktifkan Terminal
+                                </button>
+                            @endif
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
+@endsection
+
+@section('custom-js')
+    <script src="{{ asset('dist') }}/assets/extensions/jquery/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Auto-submit form when filter changes (immediate for dropdowns)
+            $('#prodi_filter, #kelas_filter, #semester_filter, #takhasus_filter').on('change', function() {
+                showLoadingState();
+                $('#filterForm').submit();
+            });
+
+            // Real-time search with AJAX
+            let searchTimeout;
+            $('#search').on('input', function() {
+                clearTimeout(searchTimeout);
+                const searchTerm = $(this).val();
+                
+                searchTimeout = setTimeout(function() {
+                    performRealTimeSearch(searchTerm);
+                }, 300); // 300ms delay to avoid too many requests
+            });
+
+            // Function to perform real-time search
+            function performRealTimeSearch(searchTerm) {
+                console.log('Performing search for:', searchTerm);
+                showLoadingState();
+                
+                // Get current filter values
+                const filters = {
+                    search: searchTerm,
+                    prodi_filter: $('#prodi_filter').val(),
+                    kelas_filter: $('#kelas_filter').val(),
+                    semester_filter: $('#semester_filter').val(),
+                    takhasus_filter: $('#takhasus_filter').val()
+                };
+                
+                console.log('Search filters:', filters);
+                console.log('Search URL:', '{{ route($spref . "akademik.data-akademik-mahasiswa-search") }}');
+                
+                $.ajax({
+                    url: '{{ route($spref . "akademik.data-akademik-mahasiswa-search") }}',
+                    type: 'GET',
+                    data: filters,
+                    success: function(response) {
+                        console.log('Search response:', response);
+                        if (response.success) {
+                            updateTableWithResults(response.data);
+                            updateStatsWithResults(response.data);
+                        } else {
+                            console.error('Search failed:', response);
+                        }
+                        hideLoadingState();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Search AJAX error:', error);
+                        console.error('Response:', xhr.responseText);
+                        hideLoadingState();
+                        // Fallback to form submission if AJAX fails
+                        $('#filterForm').submit();
+                    }
+                });
+            }
+
+            // Function to update table with search results
+            function updateTableWithResults(data) {
+                const tbody = $('.table tbody');
+                tbody.empty();
+                
+                if (data.length === 0) {
+                    tbody.append(`
+                        <tr>
+                            <td colspan="9" class="text-center py-4">
+                                <i class="fas fa-search fa-2x text-muted mb-2"></i>
+                                <p class="text-muted mb-0">Tidak ada data yang ditemukan</p>
+                            </td>
+                        </tr>
+                    `);
+                    return;
+                }
+                
+                data.forEach(function(item, index) {
+                    const row = `
+                        <tr>
+                            <td data-label="No">${item.no}</td>
+                            <td data-label="Nama Mahasantri">
+                                <div class="d-flex align-items-center">
+                                    <img src="${item.photo}" alt="${item.name}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #e9ecef;">
+                                    <div>
+                                        <span class="fw-bold">${item.name}</span>
+                                        <br>
+                                        <small class="text-muted">${item.email}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="NIM">
+                                ${item.numb_nim ? 
+                                    `<span class="badge bg-light-success text-success">${item.numb_nim}</span>` : 
+                                    `<span class="badge bg-light-warning text-warning">Belum Ada</span>`
+                                }
+                            </td>
+                            <td data-label="Program Studi">${item.prodi_name}</td>
+                            <td data-label="Kelas">${item.kelas_name}</td>
+                            <td data-label="Semester">${item.semester}</td>
+                            <td data-label="Takhasus">${item.takhasus}</td>
+                            <td data-label="Status" class="text-center">
+                                ${item.terminal_status}
+                                ${item.is_terminal ? 
+                                    `<div class="mt-1">
+                                        <small class="text-muted" title="Terminal sejak: ${item.terminal_date}">
+                                            <i class="fas fa-clock me-1"></i>${item.terminal_date}
+                                        </small>
+                                    </div>` : ''
+                                }
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#editData${item.code}" class="btn btn-sm btn-primary" title="Edit Data Akademik">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#editProfileData${item.code}" class="btn btn-sm btn-success" title="Edit Profile Lengkap">
+                                        <i class="fas fa-user-edit"></i>
+                                    </a>
+                                    ${item.is_terminal ? 
+                                        `<button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#terminalModal${item.code}" title="Nonaktifkan Terminal">
+                                            <i class="fas fa-unlock"></i>
+                                        </button>` :
+                                        `<button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#terminalModal${item.code}" title="Aktifkan Terminal">
+                                            <i class="fas fa-ban"></i>
+                                        </button>`
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.append(row);
+                });
+            }
+
+            // Function to update stats with search results
+            function updateStatsWithResults(data) {
+                const totalCount = data.length;
+                const withNimCount = data.filter(item => item.numb_nim && item.numb_nim !== 'Belum Ada').length;
+                const withoutNimCount = totalCount - withNimCount;
+                const withKelasCount = data.filter(item => item.kelas_name && item.kelas_name !== '-').length;
+                
+                // Update stats cards
+                $('.bg-light-primary h3').text(totalCount);
+                $('.bg-light-success h3').text(withNimCount);
+                $('.bg-light-warning h3').text(withoutNimCount);
+                $('.bg-light-info h3').text(withKelasCount);
+            }
+
+            // Function to hide loading state
+            function hideLoadingState() {
+                const submitBtn = $('#filterForm').find('button[type="submit"]');
+                submitBtn.html('<i class="fas fa-search me-1"></i>Filter');
+                submitBtn.prop('disabled', false);
+                
+                // Remove loading overlay
+                $('.loading-overlay').remove();
+            }
+
+            // Show loading state function
+            function showLoadingState() {
+                const submitBtn = $('#filterForm').find('button[type="submit"]');
+                const originalText = submitBtn.html();
+                submitBtn.html('<i class="fas fa-spinner fa-spin me-1"></i>Memfilter...');
+                submitBtn.prop('disabled', true);
+                
+                // Add loading overlay to table
+                $('.table-responsive').append('<div class="loading-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; z-index: 10;"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i></div>');
+            }
+
+            // Don't initialize DataTable since we're using custom real-time search
+            // $('.table').DataTable({...});
+
+            // Function to load takhasus options
+            function loadTakhasusOptions(prodiId, takhasusSelect, currentTakhasusId) {
+                // Clear current options
+                takhasusSelect.html('<option value="">Pilih Takhasus</option>');
+                
+                if (!prodiId) {
+                    return;
+                }
+                
+                // Show loading
+                takhasusSelect.html('<option value="">Loading...</option>');
+                
+                // Fetch takhasus options
+                $.ajax({
+                    url: '{{ route($spref . "akademik.get-takhasus-options") }}',
+                    type: 'GET',
+                    data: { prodi_id: prodiId },
+                    success: function(data) {
+                        takhasusSelect.html('<option value="">Pilih Takhasus</option>');
+                        
+                        if (data && data.length > 0) {
+                            $.each(data, function(index, option) {
+                                const selected = option.id == currentTakhasusId ? 'selected' : '';
+                                takhasusSelect.append(`<option value="${option.id}" ${selected}>${option.name}</option>`);
+                            });
+                        } else {
+                            takhasusSelect.append('<option value="" disabled>Tidak ada takhasus tersedia</option>');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error loading takhasus:', error);
+                        takhasusSelect.html('<option value="">Error loading takhasus</option>');
+                    }
+                });
+            }
+
+            // Handle program studi change and modal events for each mahasiswa
+            @foreach ($mahasiswa as $item)
+            // Handle program studi change event
+            $('#edit_prodi_id{{ $item->code }}').on('change', function() {
+                const prodiId = $(this).val();
+                const takhasusSelect = $('#edit_takhasus_id{{ $item->code }}');
+                const currentTakhasusId = '{{ $item->takhasus_id ?? "" }}';
+                loadTakhasusOptions(prodiId, takhasusSelect, currentTakhasusId);
+            });
+
+            // Load takhasus options when modal is shown
+            $('#editData{{ $item->code }}').on('shown.bs.modal', function() {
+                const prodiId = $('#edit_prodi_id{{ $item->code }}').val();
+                const takhasusSelect = $('#edit_takhasus_id{{ $item->code }}');
+                const currentTakhasusId = '{{ $item->takhasus_id ?? "" }}';
+                
+                if (prodiId) {
+                    loadTakhasusOptions(prodiId, takhasusSelect, currentTakhasusId);
+                }
+            });
+            @endforeach
+
+            // Handle import form submission with progress modal
+            $('#importForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                // Validate file selection
+                const fileInput = $('#import_file')[0];
+                if (!fileInput.files.length) {
+                    Swal.fire({
+                        title: 'File Belum Dipilih!',
+                        text: 'Silakan pilih file Excel (.xlsx) terlebih dahulu.',
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                // Hide import modal and show progress modal
+                $('#importModal').modal('hide');
+                $('#importProgressModal').modal('show');
+
+                // Reset progress indicators
+                updateProgress(0, 'Memulai proses import...', 0, 0, 0, 0);
+
+                // Create FormData for file upload
+                const formData = new FormData(this);
+
+                // Start simulated progress (since we can't get real-time progress from server)
+                let progress = 0;
+                const progressInterval = setInterval(function() {
+                    progress += Math.random() * 15;
+                    if (progress > 90) {
+                        progress = 90;
+                        clearInterval(progressInterval);
+                    }
+                    updateProgress(progress, 'Memproses data Excel...', 0, 0, 0, 0);
+                }, 500);
+
+                // Submit form via AJAX
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        clearInterval(progressInterval);
+                        
+                        // Parse response if it's a string
+                        if (typeof response === 'string') {
+                            // Handle redirect response (success case)
+                            updateProgress(100, 'Import berhasil diselesaikan!', 0, 0, 0, 0);
+                            
+                            setTimeout(function() {
+                                $('#importProgressModal').modal('hide');
+                                Swal.fire({
+                                    title: 'Import Berhasil!',
+                                    text: 'Data mahasiswa berhasil diimport. Halaman akan dimuat ulang.',
+                                    icon: 'success',
+                                    confirmButtonText: 'OK'
+                                }).then(function() {
+                                    window.location.reload();
+                                });
+                            }, 1000);
+                        } else {
+                            // Handle JSON response with statistics
+                            const stats = response.stats || { imported: 0, skipped: 0, updated: 0, failed: 0 };
+                            updateProgress(100, 'Import berhasil diselesaikan!', 
+                                stats.imported, stats.skipped, stats.updated, stats.failed);
+                            
+                            setTimeout(function() {
+                                $('#importProgressModal').modal('hide');
+                                showImportResults(response);
+                            }, 2000);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        clearInterval(progressInterval);
+                        
+                        let errorMessage = 'Terjadi kesalahan saat mengimport data.';
+                        
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        } else if (xhr.responseText) {
+                            errorMessage = xhr.responseText;
+                        }
+                        
+                        updateProgress(100, 'Import gagal!', 0, 0, 0, 1);
+                        
+                        setTimeout(function() {
+                            $('#importProgressModal').modal('hide');
+                            Swal.fire({
+                                title: 'Import Gagal!',
+                                text: errorMessage,
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }, 1000);
+                    }
+                });
+            });
+
+            // Function to update progress indicators
+            function updateProgress(percentage, status, imported, skipped, updated, failed) {
+                $('#importProgressBar').css('width', percentage + '%').attr('aria-valuenow', percentage);
+                $('#importProgressText').text(Math.round(percentage) + '%');
+                $('#importStatus').text(status);
+                $('#importedCount').text(imported);
+                $('#skippedCount').text(skipped);
+                $('#updatedCount').text(updated);
+                $('#failedCount').text(failed);
+                
+                // Update progress bar color based on status
+                const progressBar = $('#importProgressBar');
+                progressBar.removeClass('bg-success bg-danger bg-warning');
+                
+                if (percentage === 100) {
+                    if (failed > 0) {
+                        progressBar.addClass('bg-warning');
+                    } else {
+                        progressBar.addClass('bg-success');
+                    }
+                }
+            }
+
+            // Function to show detailed import results
+            function showImportResults(response) {
+                let resultHtml = '<div class="text-start">';
+                resultHtml += '<h6>📊 Statistik Import:</h6>';
+                resultHtml += '<ul>';
+                resultHtml += '<li>✅ Data berhasil diimport: ' + (response.stats?.imported || 0) + '</li>';
+                resultHtml += '<li>⏭️ Data dilewati (duplikat): ' + (response.stats?.skipped || 0) + '</li>';
+                resultHtml += '<li>🔄 Data diperbarui: ' + (response.stats?.updated || 0) + '</li>';
+                resultHtml += '<li>❌ Data gagal diproses: ' + (response.stats?.failed || 0) + '</li>';
+                resultHtml += '</ul>';
+                
+                if (response.stats?.errors && response.stats.errors.length > 0) {
+                    resultHtml += '<h6 class="mt-3">⚠️ Detail Error:</h6>';
+                    resultHtml += '<ul class="text-danger">';
+                    response.stats.errors.forEach(function(error) {
+                        resultHtml += '<li>' + error + '</li>';
+                    });
+                    resultHtml += '</ul>';
+                }
+                
+                if (response.stats?.warnings && response.stats.warnings.length > 0) {
+                    resultHtml += '<h6 class="mt-3">⚠️ Peringatan:</h6>';
+                    resultHtml += '<ul class="text-warning">';
+                    response.stats.warnings.forEach(function(warning) {
+                        resultHtml += '<li>' + warning + '</li>';
+                    });
+                    resultHtml += '</ul>';
+                }
+                
+                resultHtml += '</div>';
+                
+                Swal.fire({
+                    title: 'Hasil Import',
+                    html: resultHtml,
+                    icon: response.stats?.failed > 0 ? 'warning' : 'success',
+                    confirmButtonText: 'OK',
+                    width: '600px'
+                }).then(function() {
+                    window.location.reload();
+                });
+            }
+        });
+
+        // Client-side validation functions for each modal
+        @foreach ($mahasiswa as $item)
+        function validateForm{{ $item->code }}() {
+            const requiredFields = [
+                { id: 'edit_numb_nim{{ $item->code }}', name: 'NIM' },
+                { id: 'edit_prodi_id{{ $item->code }}', name: 'Program Studi' },
+                { id: 'edit_kelas_id{{ $item->code }}', name: 'Kelas' },
+                { id: 'edit_semester{{ $item->code }}', name: 'Semester' }
+            ];
+
+            for (let field of requiredFields) {
+                const element = document.getElementById(field.id);
+                if (!element.value.trim()) {
+                    Swal.fire({
+                        title: 'Field Wajib Kosong!',
+                        text: field.name + ' harus diisi.',
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                    element.focus();
+                    return false;
+                }
+            }
+            return true;
+        }
+        @endforeach
+    </script>
+@endsection

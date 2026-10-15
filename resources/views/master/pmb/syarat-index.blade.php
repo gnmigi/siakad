@@ -156,23 +156,40 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">{{ $pages }}</h5>
-                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseForm" aria-expanded="false" aria-controls="collapseForm">
-                        <i class="fas fa-plus-circle me-2"></i>Tambah Syarat
-                    </button>
+                    <div>
+                        <a href="{{ route((isset($spref) ? $spref : '') . 'pmb.syarat-uploads') }}" class="btn btn-info me-2">
+                            <i class="fas fa-file-upload me-2"></i>Review Upload
+                        </a>
+                        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseForm" aria-expanded="false" aria-controls="collapseForm">
+                            <i class="fas fa-plus-circle me-2"></i>Tambah Syarat
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <!-- Quick Stats -->
                     <div class="row mb-4">
-                        <div class="col-md-6 mb-2">
+                        <div class="col-md-3 mb-2">
                             <div class="p-3 bg-light-primary rounded">
                                 <h6 class="mb-2">Total Syarat</h6>
-                                <h3 class="mb-0">{{ count($syarats) }}</h3>
+                                <h3 class="mb-0">{{ count($requirements) }}</h3>
                             </div>
                         </div>
-                        <div class="col-md-6 mb-2">
+                        <div class="col-md-3 mb-2">
                             <div class="p-3 bg-light-success rounded">
-                                <h6 class="mb-2">Total Jalur</h6>
-                                <h3 class="mb-0">{{ count($jalurs) }}</h3>
+                                <h6 class="mb-2">Syarat Aktif</h6>
+                                <h3 class="mb-0">{{ $requirements->where('is_active', true)->count() }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <div class="p-3 bg-light-warning rounded">
+                                <h6 class="mb-2">Upload Pending</h6>
+                                <h3 class="mb-0">{{ $requirements->sum('pending_uploads_count') }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <div class="p-3 bg-light-info rounded">
+                                <h6 class="mb-2">Upload Disetujui</h6>
+                                <h3 class="mb-0">{{ $requirements->sum('approved_uploads_count') }}</h3>
                             </div>
                         </div>
                     </div>
@@ -181,34 +198,70 @@
                     <div class="collapse" id="collapseForm">
                         <div class="card card-body border">
                             <h5 class="card-title mb-3">Tambah Syarat Baru</h5>
-                            <form action="{{ route($spref . 'pmb.syarat-handle') }}" method="post">
+                            <form action="{{ route((isset($spref) ? $spref : '') . 'pmb.syarat-handle') }}" method="post">
                                 @csrf
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="name" class="form-label">Nama Syarat</label>
-                                        <input type="text" class="form-control" name="name" id="name" placeholder="Contoh: Ijazah SMA">
+                                        <input type="text" class="form-control" name="name" id="name" placeholder="Contoh: Ijazah SMA" value="{{ old('name') }}">
                                         @error('name')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="jalur_id" class="form-label">Jalur Pendaftaran</label>
-                                        <select class="form-select" name="jalur_id" id="jalur_id">
-                                            <option value="">Pilih Jalur</option>
-                                            @foreach ($jalurs as $jalur)
-                                                <option value="{{ $jalur->id }}">{{ $jalur->name }}</option>
-                                            @endforeach
+                                        <label for="type" class="form-label">Tipe Dokumen</label>
+                                        <select class="form-select" name="type" id="type">
+                                            <option value="file" {{ old('type') == 'file' ? 'selected' : '' }}>File Umum</option>
+                                            <option value="image" {{ old('type') == 'image' ? 'selected' : '' }}>Gambar</option>
+                                            <option value="document" {{ old('type') == 'document' ? 'selected' : '' }}>Dokumen</option>
                                         </select>
-                                        @error('jalur_id')
+                                        @error('type')
+                                            <small class="text-danger">{{ $message }}</small>
+                                        @enderror
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="allowed_extensions" class="form-label">Ekstensi File</label>
+                                        <input type="text" class="form-control" name="allowed_extensions" id="allowed_extensions" placeholder="jpg,jpeg,png,pdf" value="{{ old('allowed_extensions', 'jpg,jpeg,png,pdf') }}">
+                                        <small class="text-muted">Pisahkan dengan koma</small>
+                                        @error('allowed_extensions')
+                                            <small class="text-danger">{{ $message }}</small>
+                                        @enderror
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="max_size_mb" class="form-label">Ukuran Maksimal (MB)</label>
+                                        <input type="number" class="form-control" name="max_size_mb" id="max_size_mb" min="1" max="50" value="{{ old('max_size_mb', 5) }}">
+                                        @error('max_size_mb')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
                                     <div class="col-12 mb-3">
-                                        <label for="desc" class="form-label">Deskripsi (Opsional)</label>
-                                        <textarea name="desc" id="desc" class="form-control" rows="3" placeholder="Deskripsi singkat syarat pendaftaran"></textarea>
-                                        @error('desc')
+                                        <label for="description" class="form-label">Deskripsi</label>
+                                        <textarea name="description" id="description" class="form-control" rows="3" placeholder="Deskripsi syarat pendaftaran">{{ old('description') }}</textarea>
+                                        @error('description')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="sort_order" class="form-label">Urutan</label>
+                                        <input type="number" class="form-control" name="sort_order" id="sort_order" min="0" value="{{ old('sort_order', 0) }}">
+                                        @error('sort_order')
+                                            <small class="text-danger">{{ $message }}</small>
+                                        @enderror
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Pengaturan</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="is_required" id="is_required" {{ old('is_required') ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="is_required">
+                                                Wajib diisi
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {{ old('is_active', true) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="is_active">
+                                                Aktif
+                                            </label>
+                                        </div>
                                     </div>
                                     <div class="col-12 d-flex justify-content-end">
                                         <button type="submit" class="btn btn-primary">
@@ -227,39 +280,73 @@
                                 <tr>
                                     <th class="text-center">No</th>
                                     <th>Nama Syarat</th>
-                                    <th>Jalur</th>
+                                    <th>Tipe</th>
+                                    <th>Status</th>
+                                    <th>Upload</th>
                                     <th class="text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($syarats as $key => $item)
+                                @forelse ($requirements as $key => $item)
                                     <tr>
-                                        <td data-label="No">{{ ++$key }}</td>
+                                        <td data-label="No" class="text-center">{{ ++$key }}</td>
                                         <td data-label="Nama Syarat">
                                             <div class="d-flex flex-column">
                                                 <span class="fw-bold">{{ $item->name }}</span>
-                                                @if($item->desc)
-                                                    <small class="text-muted">{{ Str::limit($item->desc, 50) }}</small>
+                                                @if($item->description)
+                                                    <small class="text-muted">{{ Str::limit($item->description, 50) }}</small>
                                                 @endif
+                                                <div class="mt-1">
+                                                    @if($item->is_required)
+                                                        <span class="badge bg-danger">Wajib</span>
+                                                    @else
+                                                        <span class="badge bg-secondary">Opsional</span>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </td>
-                                        <td data-label="Jalur">{{ $item->jalur->name }}</td>
-                                        <td>
+                                        <td data-label="Tipe">
+                                            <span class="badge bg-info">{{ ucfirst($item->type) }}</span>
+                                            <br><small class="text-muted">{{ $item->allowed_extensions }}</small>
+                                            <br><small class="text-muted">Max: {{ $item->max_size_mb }}MB</small>
+                                        </td>
+                                        <td data-label="Status">
+                                            @if($item->is_active)
+                                                <span class="badge bg-success">Aktif</span>
+                                            @else
+                                                <span class="badge bg-secondary">Nonaktif</span>
+                                            @endif
+                                        </td>
+                                        <td data-label="Upload">
+                                            <div class="d-flex flex-column">
+                                                <small>Total: {{ $item->uploads_count }}</small>
+                                                <small class="text-warning">Pending: {{ $item->pending_uploads_count }}</small>
+                                                <small class="text-success">Disetujui: {{ $item->approved_uploads_count }}</small>
+                                            </div>
+                                        </td>
+                                        <td data-label="Aksi" class="text-center">
                                             <div class="btn-group" role="group">
-                                                <a href="#" data-bs-toggle="modal" data-bs-target="#editData{{ $item->code }}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Edit Syarat">
+                                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editData{{ $item->id }}" title="Edit Syarat">
                                                     <i class="fas fa-edit"></i>
+                                                </button>
+                                                <a href="{{ route((isset($spref) ? $spref : '') . 'pmb.syarat-toggle-active', $item->id) }}" class="btn btn-sm {{ $item->is_active ? 'btn-warning' : 'btn-success' }}" title="{{ $item->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
+                                                    <i class="fas {{ $item->is_active ? 'fa-eye-slash' : 'fa-eye' }}"></i>
                                                 </a>
-                                                <form action="{{ route($spref . 'pmb.syarat-delete', $item->code) }}" method="POST" class="d-inline" id="delete-form-{{ $item->code }}">
+                                                <form action="{{ route((isset($spref) ? $spref : '') . 'pmb.syarat-delete', $item->id) }}" method="POST" class="d-inline" id="delete-form-{{ $item->id }}">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="button" class="btn btn-sm btn-danger" data-confirm-delete="true" data-bs-toggle="tooltip" title="Hapus Syarat" onclick="confirmDelete('{{ $item->code }}')">
+                                                    <button type="button" class="btn btn-sm btn-danger" title="Hapus Syarat" onclick="confirmDelete('{{ $item->id }}')">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>
                                             </div>
                                         </td>
                                     </tr>
-                                @endforeach
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center">Belum ada syarat pendaftaran</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -274,28 +361,31 @@
                     <h5 class="card-title">Informasi Syarat</h5>
                 </div>
                 <div class="card-body">
-                    <p>Bagian ini menampilkan informasi umum dan petunjuk terkait pengelolaan Syarat Pendaftaran.</p>
+                    <p>Bagian ini menampilkan informasi umum dan petunjuk terkait pengelolaan Syarat Pendaftaran PMB.</p>
                     
                     <div class="alert alert-light-success">
                         <h6 class="">Petunjuk Penggunaan:</h6>
                         <ul class="mb-0">
                             <li>Klik tombol "Tambah Syarat" untuk menambahkan syarat baru</li>
                             <li>Klik ikon <i class="fas fa-edit"></i> untuk mengedit data syarat</li>
+                            <li>Klik ikon <i class="fas fa-eye"></i>/<i class="fas fa-eye-slash"></i> untuk mengaktifkan/nonaktifkan syarat</li>
                             <li>Klik ikon <i class="fas fa-trash"></i> untuk menghapus syarat</li>
+                            <li>Klik "Review Upload" untuk melihat dan mengelola dokumen yang diupload mahasiswa</li>
                         </ul>
                     </div>
                     
-                    @if(count($syarats) > 0)
+                    @if(count($requirements) > 0)
                         <div class="mt-4">
                             <h6>Syarat Terbaru</h6>
                             <div class="list-group">
-                                @foreach($syarats->take(5) as $syarat)
+                                @foreach($requirements->take(5) as $syarat)
                                     <div class="list-group-item list-group-item-action">
                                         <div class="d-flex w-100 justify-content-between">
                                             <h6 class="mb-1">{{ $syarat->name }}</h6>
-                                            <small class="text-muted">{{ $syarat->jalur->name }}</small>
+                                            <small class="text-muted">{{ ucfirst($syarat->type) }}</small>
                                         </div>
-                                        <p class="mb-1">{{ Str::limit($syarat->desc, 50) }}</p>
+                                        <p class="mb-1">{{ Str::limit($syarat->description, 50) }}</p>
+                                        <small>Upload: {{ $syarat->uploads_count }}</small>
                                     </div>
                                 @endforeach
                             </div>
@@ -307,44 +397,80 @@
     </div>
 
     <!-- Edit Modals -->
-    @foreach ($syarats as $item)
-        <div class="modal fade" id="editData{{ $item->code }}" tabindex="-1" role="dialog" aria-labelledby="editModalLabel{{ $item->code }}" aria-hidden="true">
+    @foreach ($requirements as $item)
+        <div class="modal fade" id="editData{{ $item->id }}" tabindex="-1" role="dialog" aria-labelledby="editModalLabel{{ $item->id }}" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                 <div class="modal-content">
-                    <form action="{{ route($spref . 'pmb.syarat-update', $item->code) }}" method="POST">
+                    <form action="{{ route((isset($spref) ? $spref : '') . 'pmb.syarat-update', $item->id) }}" method="POST">
                         @method('patch')
                         @csrf
                         <div class="modal-header">
-                            <h5 class="modal-title" id="editModalLabel{{ $item->code }}">Edit Syarat - {{ $item->name }}</h5>
+                            <h5 class="modal-title" id="editModalLabel{{ $item->id }}">Edit Syarat - {{ $item->name }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="edit_name{{ $item->code }}" class="form-label">Nama Syarat</label>
-                                    <input type="text" class="form-control" name="name" id="edit_name{{ $item->code }}" value="{{ $item->name }}" placeholder="Contoh: Ijazah SMA">
+                                    <label for="edit_name{{ $item->id }}" class="form-label">Nama Syarat</label>
+                                    <input type="text" class="form-control" name="name" id="edit_name{{ $item->id }}" value="{{ $item->name }}" placeholder="Contoh: Ijazah SMA">
                                     @error('name')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="edit_jalur_id{{ $item->code }}" class="form-label">Jalur Pendaftaran</label>
-                                    <select class="form-select" name="jalur_id" id="edit_jalur_id{{ $item->code }}">
-                                        <option value="">Pilih Jalur</option>
-                                        @foreach ($jalurs as $jalur)
-                                            <option value="{{ $jalur->id }}" {{ $item->jalur_id == $jalur->id ? 'selected' : '' }}>{{ $jalur->name }}</option>
-                                        @endforeach
+                                    <label for="edit_type{{ $item->id }}" class="form-label">Tipe Dokumen</label>
+                                    <select class="form-select" name="type" id="edit_type{{ $item->id }}">
+                                        <option value="file" {{ $item->type == 'file' ? 'selected' : '' }}>File Umum</option>
+                                        <option value="image" {{ $item->type == 'image' ? 'selected' : '' }}>Gambar</option>
+                                        <option value="document" {{ $item->type == 'document' ? 'selected' : '' }}>Dokumen</option>
                                     </select>
-                                    @error('jalur_id')
+                                    @error('type')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="edit_allowed_extensions{{ $item->id }}" class="form-label">Ekstensi File</label>
+                                    <input type="text" class="form-control" name="allowed_extensions" id="edit_allowed_extensions{{ $item->id }}" value="{{ $item->allowed_extensions }}">
+                                    <small class="text-muted">Pisahkan dengan koma</small>
+                                    @error('allowed_extensions')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="edit_max_size_mb{{ $item->id }}" class="form-label">Ukuran Maksimal (MB)</label>
+                                    <input type="number" class="form-control" name="max_size_mb" id="edit_max_size_mb{{ $item->id }}" min="1" max="50" value="{{ $item->max_size_mb }}">
+                                    @error('max_size_mb')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
                                 <div class="col-12 mb-3">
-                                    <label for="edit_desc{{ $item->code }}" class="form-label">Deskripsi (Opsional)</label>
-                                    <textarea name="desc" id="edit_desc{{ $item->code }}" class="form-control" rows="3" placeholder="Deskripsi singkat syarat pendaftaran">{{ $item->desc }}</textarea>
-                                    @error('desc')
+                                    <label for="edit_description{{ $item->id }}" class="form-label">Deskripsi</label>
+                                    <textarea name="description" id="edit_description{{ $item->id }}" class="form-control" rows="3" placeholder="Deskripsi syarat pendaftaran">{{ $item->description }}</textarea>
+                                    @error('description')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="edit_sort_order{{ $item->id }}" class="form-label">Urutan</label>
+                                    <input type="number" class="form-control" name="sort_order" id="edit_sort_order{{ $item->id }}" min="0" value="{{ $item->sort_order }}">
+                                    @error('sort_order')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Pengaturan</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="is_required" id="edit_is_required{{ $item->id }}" {{ $item->is_required ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="edit_is_required{{ $item->id }}">
+                                            Wajib diisi
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="is_active" id="edit_is_active{{ $item->id }}" {{ $item->is_active ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="edit_is_active{{ $item->id }}">
+                                            Aktif
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -370,33 +496,38 @@
     <script>
         // Initialize DataTable
         $(document).ready(function() {
-            $('.table').DataTable({
-                language: {
-                    search: "Cari:",
-                    lengthMenu: "Tampilkan _MENU_ data per halaman",
-                    zeroRecords: "Data tidak ditemukan",
-                    info: "Menampilkan halaman _PAGE_ dari _PAGES_",
-                    infoEmpty: "Tidak ada data yang tersedia",
-                    infoFiltered: "(difilter dari _MAX_ total data)",
-                    paginate: {
-                        first: "Pertama",
-                        last: "Terakhir",
-                        next: "Selanjutnya",
-                        previous: "Sebelumnya"
-                    }
-                },
-                responsive: true,
-                pageLength: 10,
-                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
-                order: [[0, 'asc']],
-                columnDefs: [
-                    { orderable: false, targets: -1 }
-                ]
-            });
+            // Check if table has data rows (excluding header)
+            var hasData = $('.table tbody tr').length > 0 && !$('.table tbody tr').first().find('td[colspan]').length;
+            
+            if (hasData) {
+                $('.table').DataTable({
+                    language: {
+                        search: "Cari:",
+                        lengthMenu: "Tampilkan _MENU_ data per halaman",
+                        zeroRecords: "Data tidak ditemukan",
+                        info: "Menampilkan halaman _PAGE_ dari _PAGES_",
+                        infoEmpty: "Tidak ada data yang tersedia",
+                        infoFiltered: "(difilter dari _MAX_ total data)",
+                        paginate: {
+                            first: "Pertama",
+                            last: "Terakhir",
+                            next: "Selanjutnya",
+                            previous: "Sebelumnya"
+                        }
+                    },
+                    responsive: true,
+                    pageLength: 10,
+                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
+                    order: [[0, 'asc']],
+                    columnDefs: [
+                        { orderable: false, targets: -1 }
+                    ]
+                });
+            }
         });
 
         // Konfirmasi delete dengan SweetAlert
-        function confirmDelete(code) {
+        function confirmDelete(id) {
             Swal.fire({
                 title: 'Apakah Anda yakin?',
                 text: "Data syarat yang dihapus tidak dapat dikembalikan!",
@@ -408,7 +539,7 @@
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    document.getElementById('delete-form-' + code).submit();
+                    document.getElementById('delete-form-' + id).submit();
                 }
             });
         }

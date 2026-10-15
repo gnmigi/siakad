@@ -1,6 +1,6 @@
 @extends('base.base-dash-index')
 @section('title')
-    Data Master Absensi Mahasiswa - Siakad By Internal Developer
+    Data Master Absensi Mahasantri - Siakad By Internal Developer
 @endsection
 @section('menu')
     Data Jadwal Kuliah
@@ -12,7 +12,7 @@
     #
 @endsection
 @section('subdesc')
-    Halaman untuk melihat Absensi Mahasiswa pada Mata Kuliah {{ $jadkul->matkul->name . ' - ' . $jadkul->pert_id }}
+    Halaman untuk melihat Absensi Mahasantri pada Mata Kuliah {{ $jadkul->matkul->name . ' - ' . $jadkul->pert_id }}
 @endsection
 @section('custom-css')
 <style>
@@ -115,7 +115,7 @@ table th {
                 <thead>
                     <tr>
                         <th class="text-center">#</th>
-                        <th class="text-center">Nama Mahasiswa</th>
+                        <th class="text-center">Nama Mahasantri</th>
                         <th class="text-center">Nomor NIM</th>
                         <th class="text-center">Nama Kelas</th>
                         <th class="text-center">Status Absen</th>
@@ -129,8 +129,8 @@ table th {
                         
                     <tr>
                         <td data-label="Number">{{ ++$key }}</td>
-                        <td data-label="Nama Mahasiswa">{{ $item->mahasiswa->mhs_name }}</td>
-                        <td data-label="Nomor NIM Mahasiswa">{{ $item->mahasiswa->mhs_nim }}</td>
+                        <td data-label="Nama Mahasantri">{{ $item->mahasiswa->mhs_name }}</td>
+                        <td data-label="Nomor NIM Mahasantri">{{ $item->mahasiswa->mhs_nim }}</td>
                         <td data-label="Nama Kelas">{{ $item->mahasiswa->kelas->name }}</td>
                         <td data-label="Status Absen">
                             {{ $item->absen_type }} <br> 

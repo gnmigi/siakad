@@ -157,9 +157,14 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">{{ $pages }}</h5>
-                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseForm" aria-expanded="false" aria-controls="collapseForm">
-                        <i class="fas fa-plus-circle me-2"></i>Tambah Tahun Akademik
-                    </button>
+                    <div class="btn-group">
+                        <button class="btn btn-success" type="button" onclick="showAutoAdvancePreview()">
+                            <i class="fas fa-rocket me-2"></i>Auto Naikkan Tahun Akademik
+                        </button>
+                        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseForm" aria-expanded="false" aria-controls="collapseForm">
+                            <i class="fas fa-plus-circle me-2"></i>Tambah Tahun Akademik
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <!-- Quick Stats -->
@@ -192,41 +197,57 @@
                                 @csrf
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label for="name" class="form-label">Nama Tahun Akademik</label>
-                                        <input type="text" class="form-control" name="name" id="name" placeholder="Contoh: 2023/2024">
+                                        <label for="name" class="form-label">Nama Tahun Akademik <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control @error('name') is-invalid @enderror" name="name" id="name" 
+                                               value="{{ old('name') }}" placeholder="Contoh: 2023/2024" required>
                                         @error('name')
-                                            <small class="text-danger">{{ $message }}</small>
+                                            <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="type" class="form-label">Tipe Semester</label>
-                                        <select class="form-select" name="type" id="type">
-                                            <option value="Ganjil">Ganjil</option>
-                                            <option value="Genap">Genap</option>
+                                        <label for="type" class="form-label">Tipe Semester <span class="text-danger">*</span></label>
+                                        <select class="form-select @error('type') is-invalid @enderror" name="type" id="type" required>
+                                            <option value="" {{ old('type') == '' ? 'selected' : '' }}>Pilih Tipe</option>
+                                            <option value="Ganjil" {{ old('type') == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                                            <option value="Genap" {{ old('type') == 'Genap' ? 'selected' : '' }}>Genap</option>
                                         </select>
                                         @error('type')
-                                            <small class="text-danger">{{ $message }}</small>
+                                            <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="start_date" class="form-label">Tanggal Mulai</label>
-                                        <input type="date" class="form-control" name="start_date" id="start_date">
+                                        <label for="start_date" class="form-label">Tanggal Mulai <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control @error('start_date') is-invalid @enderror" 
+                                               name="start_date" id="start_date" value="{{ old('start_date') }}" required>
                                         @error('start_date')
-                                            <small class="text-danger">{{ $message }}</small>
+                                            <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="ended_date" class="form-label">Tanggal Berakhir</label>
-                                        <input type="date" class="form-control" name="ended_date" id="ended_date">
+                                        <label for="ended_date" class="form-label">Tanggal Berakhir <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control @error('ended_date') is-invalid @enderror" 
+                                               name="ended_date" id="ended_date" value="{{ old('ended_date') }}" required>
                                         @error('ended_date')
-                                            <small class="text-danger">{{ $message }}</small>
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                                        <select class="form-select @error('status') is-invalid @enderror" name="status" id="status" required>
+                                            <option value="" {{ old('status') == '' ? 'selected' : '' }}>Pilih Status</option>
+                                            <option value="Aktif" {{ old('status') == 'Aktif' ? 'selected' : '' }}>Aktif</option>
+                                            <option value="Tidak Aktif" {{ old('status') == 'Tidak Aktif' ? 'selected' : '' }}>Tidak Aktif</option>
+                                        </select>
+                                        @error('status')
+                                            <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
                                     <div class="col-12 mb-3">
                                         <label for="desc" class="form-label">Deskripsi</label>
-                                        <textarea name="desc" id="desc" class="form-control" rows="4" placeholder="Deskripsi tahun akademik"></textarea>
+                                        <textarea name="desc" id="desc" class="form-control @error('desc') is-invalid @enderror" 
+                                                  rows="4" placeholder="Deskripsi tahun akademik">{{ old('desc') }}</textarea>
                                         @error('desc')
-                                            <small class="text-danger">{{ $message }}</small>
+                                            <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
                                     <div class="col-12 d-flex justify-content-end">
@@ -370,14 +391,14 @@
                             </div>
                             <div class="mb-3">
                                 <label for="edit_start_date{{ $item->code }}" class="form-label">Tanggal Mulai</label>
-                                <input type="date" class="form-control" name="start_date" id="edit_start_date{{ $item->code }}" value="{{ $item->start_date }}">
+                                <input type="date" class="form-control" name="start_date" id="edit_start_date{{ $item->code }}" value="{{ $item->formatted_start_date }}">
                                 @error('start_date')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
                             <div class="mb-3">
                                 <label for="edit_ended_date{{ $item->code }}" class="form-label">Tanggal Berakhir</label>
-                                <input type="date" class="form-control" name="ended_date" id="edit_ended_date{{ $item->code }}" value="{{ $item->ended_date }}">
+                                <input type="date" class="form-control" name="ended_date" id="edit_ended_date{{ $item->code }}" value="{{ $item->formatted_ended_date }}">
                                 @error('ended_date')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
@@ -411,6 +432,69 @@
             </div>
         </div>
     @endforeach
+
+    <!-- Auto Advance Preview Modal -->
+    <div class="modal fade" id="autoAdvancePreviewModal" tabindex="-1" aria-labelledby="autoAdvancePreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="autoAdvancePreviewModalLabel">
+                        <i class="fas fa-rocket me-2"></i>Preview Auto Naikkan Tahun Akademik
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="previewContent">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Memuat preview...</p>
+                    </div>
+                </div>
+                <div class="modal-footer" id="previewFooter" style="display: none;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-success" id="executeAdvanceBtn">
+                        <i class="fas fa-rocket me-2"></i>Jalankan Auto Advance
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto Advance Confirmation Modal -->
+    <div class="modal fade" id="autoAdvanceConfirmModal" tabindex="-1" aria-labelledby="autoAdvanceConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="autoAdvanceConfirmModalLabel">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>Konfirmasi Auto Advance
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <strong>Peringatan!</strong> Tindakan ini akan:
+                        <ul class="mb-0 mt-2">
+                            <li>Membuat tahun akademik baru secara otomatis</li>
+                            <li>Menaikkan semester semua mahasiswa aktif</li>
+                            <li>Mengubah status mahasiswa semester > 14 menjadi Non-Aktif (Drop Out)</li>
+                            <li>Mengaktifkan tahun akademik baru</li>
+                        </ul>
+                    </div>
+                    <p><strong>Apakah Anda yakin ingin melanjutkan?</strong></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <form id="autoAdvanceForm" action="{{ route($spref . 'akademik.taka-auto-advance') }}" method="POST" style="display: inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-rocket me-2"></i>Ya, Jalankan Sekarang
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('custom-js')
@@ -445,6 +529,27 @@
                     { orderable: false, targets: -1 }
                 ]
             });
+
+            // Client-side validation for date fields
+            $('#start_date, #ended_date').on('change', function() {
+                const startDate = new Date($('#start_date').val());
+                const endDate = new Date($('#ended_date').val());
+                
+                if (startDate && endDate && startDate >= endDate) {
+                    $('#ended_date').addClass('is-invalid');
+                    if (!$('.date-error').length) {
+                        $('#ended_date').after('<div class="invalid-feedback date-error">Tanggal berakhir harus setelah tanggal mulai</div>');
+                    }
+                } else {
+                    $('#ended_date').removeClass('is-invalid');
+                    $('.date-error').remove();
+                }
+            });
+
+            // Auto-hide success/error messages after 5 seconds
+            setTimeout(function() {
+                $('.alert-success, .alert-danger').fadeOut('slow');
+            }, 5000);
         });
 
         // Konfirmasi delete dengan SweetAlert
@@ -464,5 +569,184 @@
                 }
             });
         }
+
+        // Show collapse form if there are validation errors
+        @if($errors->any())
+            $(document).ready(function() {
+                $('#collapseForm').collapse('show');
+                $('html, body').animate({
+                    scrollTop: $('#collapseForm').offset().top - 100
+                }, 500);
+            });
+        @endif
+
+        // Auto Advance Academic Year Functions
+        function showAutoAdvancePreview() {
+            // Show modal
+            $('#autoAdvancePreviewModal').modal('show');
+            
+            // Reset modal content
+            $('#previewContent').html(`
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Memuat preview...</p>
+                </div>
+            `);
+            $('#previewFooter').hide();
+            
+            // Fetch preview data
+            $.ajax({
+                url: '{{ route($spref . "akademik.taka-preview-advancement") }}',
+                method: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        displayPreviewData(response.data, response.warnings);
+                        $('#previewFooter').show();
+                    } else {
+                        displayPreviewError(response.message, response.errors);
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Terjadi kesalahan saat memuat preview.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    displayPreviewError(errorMessage, xhr.responseJSON?.errors);
+                }
+            });
+        }
+
+        function displayPreviewData(data, warnings) {
+            let warningsHtml = '';
+            if (warnings && warnings.length > 0) {
+                warningsHtml = `
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Peringatan:</h6>
+                        <ul class="mb-0">
+                            ${warnings.map(warning => `<li>${warning}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            let semesterDistributionHtml = '';
+            if (data.student_statistics.semester_distribution.length > 0) {
+                semesterDistributionHtml = `
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Semester Saat Ini</th>
+                                    <th>Semester Setelah Naik</th>
+                                    <th>Jumlah Mahasiswa</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.student_statistics.semester_distribution.map(item => `
+                                    <tr>
+                                        <td><span class="badge bg-light-info text-info">Semester ${item.current_semester}</span></td>
+                                        <td><span class="badge bg-light-success text-success">Semester ${item.next_semester}</span></td>
+                                        <td><strong>${item.count}</strong> mahasiswa</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            let droppedOutStudentsHtml = '';
+            if (data.student_statistics.dropped_out_students.length > 0) {
+                droppedOutStudentsHtml = `
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Mahasiswa yang Akan Drop Out:</h6>
+                        ${data.student_statistics.dropped_out_students.map(group => `
+                            <p class="mb-1"><strong>${group.count} mahasiswa</strong> dari semester ${group.current_semester} akan drop out (Non-Aktif)</p>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            $('#previewContent').html(`
+                ${warningsHtml}
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-primary">
+                            <div class="card-header bg-light-primary">
+                                <h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Tahun Akademik Saat Ini</h6>
+                            </div>
+                            <div class="card-body">
+                                <h5>${data.current_academic_year.name}</h5>
+                                <p class="mb-1"><span class="badge bg-light-info text-info">${data.current_academic_year.type}</span></p>
+                                <small class="text-muted">${data.current_academic_year.period}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-header bg-light-success">
+                                <h6 class="mb-0"><i class="fas fa-arrow-right me-2"></i>Tahun Akademik Baru</h6>
+                            </div>
+                            <div class="card-body">
+                                <h5>${data.next_academic_year.name}</h5>
+                                <p class="mb-1"><span class="badge bg-light-success text-success">${data.next_academic_year.type}</span></p>
+                                <small class="text-muted">${data.next_academic_year.period}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="text-center p-3 bg-light-primary rounded">
+                            <h3 class="text-primary">${data.student_statistics.total_active_students}</h3>
+                            <p class="mb-0">Total Mahasiswa Aktif</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 bg-light-success rounded">
+                            <h3 class="text-success">${data.student_statistics.total_advancing}</h3>
+                            <p class="mb-0">Akan Naik Semester</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 bg-light-warning rounded">
+                            <h3 class="text-warning">${data.student_statistics.total_dropped_out}</h3>
+                            <p class="mb-0">Akan Drop Out</p>
+                        </div>
+                    </div>
+                </div>
+
+                ${droppedOutStudentsHtml}
+
+                <h6><i class="fas fa-list me-2"></i>Detail Kenaikan Semester:</h6>
+                ${semesterDistributionHtml}
+            `);
+        }
+
+        function displayPreviewError(message, errors) {
+            let errorHtml = `<div class="alert alert-danger"><h6>Error:</h6><p>${message}</p>`;
+            
+            if (errors && errors.length > 0) {
+                errorHtml += `<ul class="mb-0">${errors.map(error => `<li>${error}</li>`).join('')}</ul>`;
+            }
+            
+            errorHtml += '</div>';
+            $('#previewContent').html(errorHtml);
+        }
+
+        // Execute auto advance
+        $('#executeAdvanceBtn').on('click', function() {
+            $('#autoAdvancePreviewModal').modal('hide');
+            $('#autoAdvanceConfirmModal').modal('show');
+        });
+
+        // Handle form submission with loading state
+        $('#autoAdvanceForm').on('submit', function() {
+            $(this).find('button[type="submit"]').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Memproses...');
+        });
     </script>
 @endsection

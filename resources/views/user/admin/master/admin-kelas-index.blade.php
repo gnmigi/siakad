@@ -43,8 +43,8 @@
                                 <td data-label="Number">{{ ++$key }}</td>
                                 <td data-label="Kelas">{{ $item->proku->name . ' - ' . $item->name }}</td>
                                 <td data-label="Program Studi">{{ $item->pstudi->name . ' - ' . $item->taka->semester}}</td>
-                                @php $mhs = \App\Models\Mahasiswa::where('class_id', $item->id)->count();                              @endphp
-                                <td data-label="Kapasitas">{{ $mhs . ' / ' . $item->capacity . ' Mahasiswa' }}</td>
+                                @php $mhs = \App\Models\Mahasantri::where('class_id', $item->id)->count();                              @endphp
+                                <td data-label="Kapasitas">{{ $mhs . ' / ' . $item->capacity . ' Mahasantri' }}</td>
                                 <td data-label="Wali Dosen">{{ $item->dosen->dsn_name }}</td>
                                 <td class="d-flex justify-content-center align-items-center">
                                     <a href="#" style="margin-right: 10px" data-bs-toggle="modal" data-bs-target="#updateKelas{{ $item->code }}" class="btn btn-outline-primary"><i class="fas fa-edit"></i></a>

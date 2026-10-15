@@ -285,16 +285,19 @@
                                         <td data-label="Nama Kelas">
                                             <div class="d-flex flex-column">
                                                 <span class="fw-bold">{{ $item->name }}</span>
-                                                <small class="text-muted">{{ $item->programStudi->name }}</small>
+                                                <small class="text-muted">{{ $item->programStudi ? $item->programStudi->name : 'Program Studi Tidak Ditemukan' }}</small>
                                             </div>
                                         </td>
                                         <td data-label="Kode">{{ $item->code }}</td>
-                                        <td data-label="Program Studi">{{ $item->programStudi->name }}</td>
-                                        <td data-label="Tahun Akademik">{{ $item->tahunAkademik->name }}</td>
-                                        <td data-label="Jenis Kelas">{{ $item->jenisKelas->name }}</td>
-                                        <td data-label="Kapasitas">{{ $item->anggota->count() . " / " . $item->capacity }}</td>
+                                        <td data-label="Program Studi">{{ $item->programStudi ? $item->programStudi->name : 'Program Studi Tidak Ditemukan' }}</td>
+                                        <td data-label="Tahun Akademik">{{ $item->tahunAkademik ? $item->tahunAkademik->name : 'Tahun Akademik Tidak Ditemukan' }}</td>
+                                        <td data-label="Jenis Kelas">{{ $item->jenisKelas ? $item->jenisKelas->name : 'Jenis Kelas Tidak Ditemukan' }}</td>
+                                        <td data-label="Kapasitas">{{ ($item->anggota ? $item->anggota->count() : 0) . " / " . $item->capacity }}</td>
                                         <td>
                                             <div class="btn-group" role="group">
+                                                <a href="{{ route($spref . 'akademik.kelas-students-view', $item->code) }}" class="btn btn-sm btn-success" data-bs-toggle="tooltip" title="Kelola Mahasiswa">
+                                                    <i class="fas fa-users"></i>
+                                                </a>
                                                 <a href="#" data-bs-toggle="modal" data-bs-target="#editData{{ $item->code }}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Edit Kelas">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
@@ -342,9 +345,9 @@
                                     <div class="list-group-item list-group-item-action">
                                         <div class="d-flex w-100 justify-content-between">
                                             <h6 class="mb-1">{{ $k->name }}</h6>
-                                            <small class="text-muted">{{ $k->jenisKelas->name }}</small>
+                                            <small class="text-muted">{{ $k->jenisKelas ? $k->jenisKelas->name : 'Jenis Kelas Tidak Ditemukan' }}</small>
                                         </div>
-                                        <p class="mb-1">{{ $k->programStudi->name }}</p>
+                                        <p class="mb-1">{{ $k->programStudi ? $k->programStudi->name : 'Program Studi Tidak Ditemukan' }}</p>
                                         <small>Kapasitas: {{ $k->capacity }} mahasiswa</small>
                                     </div>
                                 @endforeach

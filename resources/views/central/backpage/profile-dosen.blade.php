@@ -1,4 +1,4 @@
-@extends('core-themes.core-backpage')
+@extends('central.backpage.core-backpage-dosen')
 
 @section('custom-css')
     <style>
@@ -69,6 +69,25 @@
             font-size: 0.875rem;
             margin-top: 0.25rem;
         }
+
+        @media (max-width: 767.98px) {
+            #profileTabs {
+                border-bottom: 1px solid var(--tblr-border-color);
+                padding-bottom: 8px;
+            }
+            #profileTabs .list-group-item {
+                border: 1px solid var(--tblr-border-color);
+                border-radius: 20px !important;
+                margin-right: 8px;
+                padding: 6px 16px;
+                white-space: nowrap;
+            }
+            #profileTabs .list-group-item.active {
+                background-color: #4b6cb7 !important;
+                color: white !important;
+                border-color: #4b6cb7;
+            }
+        }
     </style>
 @endsection
 
@@ -79,8 +98,8 @@
         <div class="row g-0">
             <div class="col-12 col-md-3 border-end">
                 <div class="card-body">
-                    <h4 class="subheader">Profile Settings</h4>
-                    <div class="list-group list-group-transparent" id="profileTabs" role="tablist">
+                    <h4 class="subheader d-none d-md-block">Profile Settings</h4>
+                    <div class="list-group list-group-transparent flex-row flex-md-column overflow-auto flex-nowrap mb-3 mb-md-0" id="profileTabs" role="tablist">
                         <a class="list-group-item list-group-item-action d-flex align-items-center active" id="personal-tab" data-bs-toggle="tab" href="#personal" role="tab">
                             <i class="fas fa-user me-2"></i> Personal Info
                         </a>
@@ -102,8 +121,76 @@
             <div class="col-12 col-md-9 d-flex flex-column">
                 <div class="card-body">
                     <h2 class="mb-4">Profile Settings</h2>
+                    <p class="text-muted mb-3">Lengkapi data profile Anda. Field yang wajib diisi ditandai dengan <span class="text-danger">*</span></p>
 
-                    <form action="{{ route($spref . 'profile-handle') }}" method="POST" enctype="multipart/form-data">
+                    <!-- Success/Error Messages -->
+                    @if(session('success'))
+                        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+                            <div class="d-flex">
+                                <div class="text-success">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M5 12l5 5l10 -10"></path>
+                                    </svg>
+                                </div>
+                                <div class="ms-2">
+                                    <h4 class="alert-title">Berhasil!</h4>
+                                    <div class="text-muted">{{ session('success') }}</div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+                            <div class="d-flex">
+                                <div class="text-danger">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-alert-circle" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"></path>
+                                        <path d="M12 8v4"></path>
+                                        <path d="M12 16h.01"></path>
+                                    </svg>
+                                </div>
+                                <div class="ms-2">
+                                    <h4 class="alert-title">Oops!</h4>
+                                    <div class="text-muted">{{ session('error') }}</div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    @if($errors->any())
+                        <div class="alert alert-warning alert-dismissible fade show border-0 shadow-sm" role="alert">
+                            <div class="d-flex">
+                                <div class="text-warning">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-info-circle" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"></path>
+                                        <path d="M12 9h.01"></path>
+                                        <path d="M11 12h1v4h1"></path>
+                                    </svg>
+                                </div>
+                                <div class="ms-2">
+                                    <h4 class="alert-title">Perhatian</h4>
+                                    <div class="text-muted">
+                                        <p class="mb-2">Mohon lengkapi data yang wajib diisi:</p>
+                                        <ul class="mb-0">
+                                            @foreach($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                        <p class="mt-2 mb-0"><small>Field yang wajib diisi ditandai dengan tanda <span class="text-danger">*</span></small></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    <form action="{{ route($spref . 'profile-handle') }}" method="POST" enctype="multipart/form-data" id="profileForm">
                         @csrf
                         @method('PATCH')
 
@@ -121,70 +208,70 @@
                                 </div>
 
                                 <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <label class="form-label required-field">Name</label>
-                                        <input type="text" class="form-control @error('name') is-invalid @enderror" name="name" value="{{ old('name', $user->name) }}" required>
-                                        @error('name')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">Title Front</label>
-                                        <input type="text" class="form-control @error('title_front') is-invalid @enderror" name="title_front" value="{{ old('title_front', $user->title_front) }}">
-                                        @error('title_front')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">Title Behind</label>
-                                        <input type="text" class="form-control @error('title_behind') is-invalid @enderror" name="title_behind" value="{{ old('title_behind', $user->title_behind) }}">
-                                        @error('title_behind')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                                <div class="col-md-4">
+                                    <label class="form-label required-field">Nama Lengkap</label>
+                                    <input type="text" class="form-control @error('name') is-invalid @enderror" name="name" value="{{ old('name', $user->name) }}" required>
+                                    @error('name')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Gelar Depan</label>
+                                    <input type="text" class="form-control @error('title_front') is-invalid @enderror" name="title_front" value="{{ old('title_front', $user->title_front) }}" placeholder="Contoh: Dr., Prof.">
+                                    @error('title_front')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Gelar Belakang</label>
+                                    <input type="text" class="form-control @error('title_behind') is-invalid @enderror" name="title_behind" value="{{ old('title_behind', $user->title_behind) }}" placeholder="Contoh: S.T., M.T.">
+                                    @error('title_behind')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
                                 </div>
 
                                 <div class="row g-3 mt-2">
                                     <div class="col-md-4">
-                                        <label class="form-label">Birth Place</label>
-                                        <input type="text" class="form-control" name="bio_placebirth" value="{{ $user->bio_placebirth }}">
+                                        <label class="form-label">Tempat Lahir</label>
+                                        <input type="text" class="form-control" name="bio_placebirth" value="{{ old('bio_placebirth', $user->bio_placebirth) }}" placeholder="Contoh: Jakarta">
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label">Birth Date</label>
-                                        <input type="date" class="form-control" name="bio_datebirth" value="{{ $user->bio_datebirth }}">
+                                        <label class="form-label">Tanggal Lahir</label>
+                                        <input type="date" class="form-control" name="bio_datebirth" value="{{ old('bio_datebirth', $user->bio_datebirth) }}">
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label">Gender</label>
+                                        <label class="form-label">Jenis Kelamin</label>
                                         <select class="form-select" name="bio_gender">
-                                            <option value="Laki-laki" {{ $user->bio_gender == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
-                                            <option value="Perempuan" {{ $user->bio_gender == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                                            <option value="Laki-laki" {{ old('bio_gender', $user->bio_gender) == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                                            <option value="Perempuan" {{ old('bio_gender', $user->bio_gender) == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
                                         </select>
                                     </div>
                                 </div>
 
                                 <div class="row g-3 mt-2">
                                     <div class="col-md-3">
-                                        <label class="form-label">Religion</label>
-                                        <input type="text" class="form-control" name="bio_religion" value="{{ $user->bio_religion }}">
+                                        <label class="form-label">Agama</label>
+                                        <input type="text" class="form-control" name="bio_religion" value="{{ old('bio_religion', $user->bio_religion) }}" placeholder="Contoh: Islam">
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label">Nationality</label>
-                                        <input type="text" class="form-control" name="bio_nationality" value="{{ $user->bio_nationality }}">
+                                        <label class="form-label">Kewarganegaraan</label>
+                                        <input type="text" class="form-control" name="bio_nationality" value="{{ old('bio_nationality', $user->bio_nationality) }}" placeholder="Contoh: Indonesia">
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label">Blood Type</label>
-                                        <input type="text" class="form-control" name="bio_blood" value="{{ $user->bio_blood }}">
+                                        <label class="form-label">Golongan Darah</label>
+                                        <input type="text" class="form-control" name="bio_blood" value="{{ old('bio_blood', $user->bio_blood) }}" placeholder="Contoh: A, B, AB, O">
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label">Height (cm)</label>
-                                        <input type="number" class="form-control" name="bio_height" value="{{ $user->bio_height }}">
+                                        <label class="form-label">Tinggi (cm)</label>
+                                        <input type="number" class="form-control" name="bio_height" value="{{ old('bio_height', $user->bio_height) }}" placeholder="Contoh: 170">
                                     </div>
                                 </div>
 
                                 <div class="row g-3 mt-2">
                                     <div class="col-md-3">
-                                        <label class="form-label">Weight (kg)</label>
-                                        <input type="number" class="form-control" name="bio_weight" value="{{ $user->bio_weight }}">
+                                        <label class="form-label">Berat (kg)</label>
+                                        <input type="number" class="form-control" name="bio_weight" value="{{ old('bio_weight', $user->bio_weight) }}" placeholder="Contoh: 65">
                                     </div>
                                 </div>
                             </div>
@@ -460,8 +547,8 @@
 
                         <div class="card-footer bg-transparent mt-4">
                             <div class="btn-list justify-content-end">
-                                <button type="button" class="btn btn-1" onclick="window.history.back()">Cancel</button>
-                                <button type="submit" class="btn btn-primary btn-2">Save Changes</button>
+                                <a href="{{ route($spref . 'dashboard-render') }}" class="btn btn-secondary">Batal</a>
+                                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                             </div>
                         </div>
                     </form>
@@ -474,13 +561,29 @@
 @section('custom-js')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Image preview functionality
+            // Image preview functionality with validation
             const photoInput = document.getElementById('photo-input');
             const previewImage = document.getElementById('preview-image');
+            const profileForm = document.getElementById('profileForm');
 
             photoInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
+                    // Validate file type
+                    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                    if (!validTypes.includes(file.type)) {
+                        alert('Please select a valid image file (JPEG, PNG, JPG)');
+                        e.target.value = '';
+                        return;
+                    }
+
+                    // Validate file size (2MB)
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert('File size must be less than 2MB');
+                        e.target.value = '';
+                        return;
+                    }
+
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         previewImage.src = e.target.result;
@@ -523,6 +626,33 @@
                     target.classList.add('show', 'active');
                 });
             });
+
+            // Form submission with loading state
+            profileForm.addEventListener('submit', function(e) {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                
+                submitBtn.textContent = 'Saving...';
+                submitBtn.disabled = true;
+                
+                // Allow form to submit normally
+                setTimeout(() => {
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }, 3000);
+            });
+
+            // Auto-hide alerts after 5 seconds
+            setTimeout(() => {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => {
+                    if (alert.classList.contains('alert-success') || alert.classList.contains('alert-danger')) {
+                        alert.style.transition = 'opacity 0.5s';
+                        alert.style.opacity = '0';
+                        setTimeout(() => alert.remove(), 500);
+                    }
+                });
+            }, 5000);
         });
     </script>
 @endsection

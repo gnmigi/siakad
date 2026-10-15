@@ -192,21 +192,26 @@
                                 @csrf
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label for="fakultas_id" class="form-label">Fakultas</label>
-                                        <select class="form-select" name="fakultas_id" id="fakultas_id">
-                                            <option value="">Pilih Fakultas</option>
-                                            @foreach ($fakultas as $f)
-                                                <option value="{{ $f->id }}">{{ $f->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('fakultas_id')
+                                        <label for="name" class="form-label">Nama Program Studi <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="name" id="name" placeholder="Contoh: Teknik Informatika" required>
+                                        @error('name')
+                                            <small class="text-danger">{{ $message }}</small>
+                                        @enderror
+                                        <div class="invalid-feedback">
+                                            Nama Program Studi wajib diisi.
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="takhasus" class="form-label">Takhasus</label>
+                                        <input type="text" class="form-control" name="takhasus" id="takhasus" placeholder="Contoh: Teknologi Informasi">
+                                        @error('takhasus')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="kaprodi_id" class="form-label">Kaprodi</label>
                                         <select class="form-select" name="kaprodi_id" id="kaprodi_id">
-                                            <option value="">Pilih Kaprodi</option>
+                                            <option value="">Pilih Kaprodi (Opsional)</option>
                                             @foreach ($dosens as $dosen)
                                                 <option value="{{ $dosen->id }}">{{ $dosen->name }}</option>
                                             @endforeach
@@ -215,23 +220,17 @@
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="name" class="form-label">Nama Program Studi</label>
-                                        <input type="text" class="form-control" name="name" id="name" placeholder="Contoh: Teknik Informatika">
-                                        @error('name')
-                                            <small class="text-danger">{{ $message }}</small>
-                                        @enderror
-                                    </div>
                                      <div class="col-md-6 mb-3">
                                         <label for="code" class="form-label">Kode Program Studi</label>
-                                        <input type="text" class="form-control" name="code" id="code" placeholder="Contoh: TI" disabled>
+                                        <input type="text" class="form-control" name="code" id="code" placeholder="Otomatis dibuat sistem" disabled>
+                                        <small class="text-muted">Kode akan dibuat otomatis oleh sistem</small>
                                         @error('code')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="level" class="form-label">Jenjang Pendidikan</label>
-                                        <select class="form-select" name="level" id="level">
+                                        <label for="level" class="form-label">Jenjang Pendidikan <span class="text-danger">*</span></label>
+                                        <select class="form-select" name="level" id="level" required>
                                             <option value="">Pilih Jenjang</option>
                                             <option value="Diploma">Diploma</option>
                                             <option value="Sarjana">Sarjana</option>
@@ -241,10 +240,13 @@
                                         @error('level')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
+                                        <div class="invalid-feedback">
+                                            Jenjang Pendidikan wajib dipilih.
+                                        </div>
                                     </div>
                                      <div class="col-md-6 mb-3">
-                                        <label for="title" class="form-label">Gelar</label>
-                                        <select class="form-select" name="title" id="title">
+                                        <label for="title" class="form-label">Gelar <span class="text-danger">*</span></label>
+                                        <select class="form-select" name="title" id="title" required>
                                              <option value="">Pilih Gelar</option>
                                             <option value="D3">D3</option>
                                             <option value="S1">S1</option>
@@ -254,6 +256,9 @@
                                         @error('title')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
+                                        <div class="invalid-feedback">
+                                            Gelar wajib dipilih.
+                                        </div>
                                     </div>
                                      <div class="col-md-6 mb-3">
                                         <label for="title_start" class="form-label">Gelar Awal (Opsional)</label>
@@ -426,21 +431,26 @@
                         <div class="modal-body">
                              <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="edit_fakultas_id{{ $item->code }}" class="form-label">Fakultas</label>
-                                    <select class="form-select" name="fakultas_id" id="edit_fakultas_id{{ $item->code }}">
-                                        <option value="">Pilih Fakultas</option>
-                                        @foreach ($fakultas as $f)
-                                            <option value="{{ $f->id }}" {{ $item->fakultas_id == $f->id ? 'selected' : '' }}>{{ $f->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('fakultas_id')
+                                    <label for="edit_name{{ $item->code }}" class="form-label">Nama Program Studi <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="name" id="edit_name{{ $item->code }}" value="{{ $item->name }}" placeholder="Contoh: Teknik Informatika" required>
+                                    @error('name')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                    <div class="invalid-feedback">
+                                        Nama Program Studi wajib diisi.
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="edit_takhasus{{ $item->code }}" class="form-label">Takhasus</label>
+                                    <input type="text" class="form-control" name="takhasus" id="edit_takhasus{{ $item->code }}" value="{{ $item->takhasus }}" placeholder="Contoh: Teknologi Informasi">
+                                    @error('takhasus')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="edit_kaprodi_id{{ $item->code }}" class="form-label">Kaprodi</label>
                                     <select class="form-select" name="kaprodi_id" id="edit_kaprodi_id{{ $item->code }}">
-                                        <option value="">Pilih Kaprodi</option>
+                                        <option value="">Pilih Kaprodi (Opsional)</option>
                                         @foreach ($dosens as $dosen)
                                             <option value="{{ $dosen->id }}" {{ $item->kaprodi_id == $dosen->id ? 'selected' : '' }}>{{ $dosen->name }}</option>
                                         @endforeach
@@ -450,22 +460,17 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="edit_name{{ $item->code }}" class="form-label">Nama Program Studi</label>
-                                    <input type="text" class="form-control" name="name" id="edit_name{{ $item->code }}" value="{{ $item->name }}" placeholder="Contoh: Teknik Informatika">
-                                    @error('name')
-                                        <small class="text-danger">{{ $message }}</small>
-                                    @enderror
-                                </div>
-                                <div class="col-md-6 mb-3">
                                     <label for="edit_code{{ $item->code }}" class="form-label">Kode Program Studi</label>
-                                    <input type="text" class="form-control" name="code" id="edit_code{{ $item->code }}" value="{{ $item->code }}" placeholder="Contoh: TI" disabled>
+                                    <input type="text" class="form-control" name="code" id="edit_code{{ $item->code }}" value="{{ $item->code }}" placeholder="Tidak dapat diubah" disabled>
+                                    <small class="text-muted">Kode tidak dapat diubah setelah dibuat</small>
                                     @error('code')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
                                  <div class="col-md-6 mb-3">
-                                    <label for="edit_level{{ $item->code }}" class="form-label">Jenjang Pendidikan</label>
-                                    <select class="form-select" name="level" id="edit_level{{ $item->code }}">
+                                    <label for="edit_level{{ $item->code }}" class="form-label">Jenjang Pendidikan <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="level" id="edit_level{{ $item->code }}" required>
+                                        <option value="">Pilih Jenjang</option>
                                         <option value="Diploma" {{ $item->level == 'Diploma' ? 'selected' : '' }}>Diploma</option>
                                         <option value="Sarjana" {{ $item->level == 'Sarjana' ? 'selected' : '' }}>Sarjana</option>
                                         <option value="Magister" {{ $item->level == 'Magister' ? 'selected' : '' }}>Magister</option>
@@ -474,10 +479,14 @@
                                     @error('level')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
+                                    <div class="invalid-feedback">
+                                        Jenjang Pendidikan wajib dipilih.
+                                    </div>
                                 </div>
                                  <div class="col-md-6 mb-3">
-                                    <label for="edit_title{{ $item->code }}" class="form-label">Gelar</label>
-                                    <select class="form-select" name="title" id="edit_title{{ $item->code }}">
+                                    <label for="edit_title{{ $item->code }}" class="form-label">Gelar <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="title" id="edit_title{{ $item->code }}" required>
+                                        <option value="">Pilih Gelar</option>
                                         <option value="D3" {{ $item->title == 'D3' ? 'selected' : '' }}>D3</option>
                                         <option value="S1" {{ $item->title == 'S1' ? 'selected' : '' }}>S1</option>
                                         <option value="S2" {{ $item->title == 'S2' ? 'selected' : '' }}>S2</option>
@@ -486,6 +495,9 @@
                                     @error('title')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
+                                    <div class="invalid-feedback">
+                                        Gelar wajib dipilih.
+                                    </div>
                                 </div>
                                  <div class="col-md-6 mb-3">
                                     <label for="edit_title_start{{ $item->code }}" class="form-label">Gelar Awal (Opsional)</label>
@@ -537,14 +549,18 @@
                                     @enderror
                                 </div>
                                 <div class="col-12 mb-3">
-                                    <label for="edit_status{{ $item->code }}" class="form-label">Status</label>
-                                    <select class="form-select" name="status" id="edit_status{{ $item->code }}">
+                                    <label for="edit_status{{ $item->code }}" class="form-label">Status <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="status" id="edit_status{{ $item->code }}" required>
+                                        <option value="">Pilih Status</option>
                                         <option value="Aktif" {{ $item->status == 'Aktif' ? 'selected' : '' }}>Aktif</option>
                                         <option value="Tidak Aktif" {{ $item->status == 'Tidak Aktif' ? 'selected' : '' }}>Tidak Aktif</option>
                                     </select>
                                     @error('status')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
+                                    <div class="invalid-feedback">
+                                        Status wajib dipilih.
+                                    </div>
                                 </div>
                              </div> {{-- End row --}}
                         </div> {{-- End modal-body --}}
@@ -592,6 +608,53 @@
                 columnDefs: [
                     { orderable: false, targets: -1 }
                 ]
+            });
+
+            // Form validation
+            $('form').on('submit', function(e) {
+                var form = this;
+                var isValid = true;
+                
+                // Check required fields
+                $(form).find('[required]').each(function() {
+                    var field = $(this);
+                    var value = field.val().trim();
+                    
+                    if (!value) {
+                        isValid = false;
+                        field.addClass('is-invalid');
+                        
+                        // Show specific error message
+                        var fieldName = field.closest('.mb-3').find('label').text().replace(' *', '');
+                        
+                        Swal.fire({
+                            title: 'Data Tidak Lengkap!',
+                            text: fieldName + ' wajib diisi.',
+                            icon: 'warning',
+                            confirmButtonText: 'OK'
+                        });
+                        
+                        field.focus();
+                        return false; // Break the loop
+                    } else {
+                        field.removeClass('is-invalid');
+                    }
+                });
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Remove invalid class on input
+            $('[required]').on('input change', function() {
+                var field = $(this);
+                var value = field.val().trim();
+                
+                if (value) {
+                    field.removeClass('is-invalid');
+                }
             });
         });
 

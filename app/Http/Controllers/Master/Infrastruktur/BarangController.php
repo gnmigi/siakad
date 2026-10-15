@@ -24,7 +24,7 @@ class BarangController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Barang";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         $data['barangs'] = Barang::with('kategori')->latest()->get();
         $data['kategoriBarangs'] = KategoriBarang::all();
         

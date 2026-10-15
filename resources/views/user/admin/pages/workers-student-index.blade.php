@@ -1,9 +1,9 @@
 @extends('base.base-dash-index')
 @section('title')
-    Data Pengguna Mahasiswa - Siakad By Internal Developer
+    Data Pengguna Mahasantri - Siakad By Internal Developer
 @endsection
 @section('menu')
-    Data Pengguna Mahasiswa
+    Data Pengguna Mahasantri
 @endsection
 @section('submenu')
     Lihat Data
@@ -12,7 +12,7 @@
     #
 @endsection
 @section('subdesc')
-    Halaman untuk melihat data pengguna Mahasiswa
+    Halaman untuk melihat data pengguna Mahasantri
 @endsection
 @section('content')
 <section class="section">
@@ -33,7 +33,7 @@
                     <tr>
                         <th class="text-center">#</th>
                         <th class="text-center">NIM</th>          
-                        <th class="text-center">Nama Mahasiswa</th>
+                        <th class="text-center">Nama Mahasantri</th>
                         <th class="text-center">Kelas</th>
                         <th class="text-center">Gender</th>
                         <th class="text-center">Join Date</th>
@@ -46,12 +46,12 @@
                         
                     <tr>
                         <td data-label="Number">{{ ++$key }}</td>
-                        <td data-label="NIM Mahasiswa">{{ $item->mhs_nim }}</td>
-                        <td data-label="Nama Mahasiswa">{{ $item->mhs_name }}</td>
+                        <td data-label="NIM Mahasantri">{{ $item->mhs_nim }}</td>
+                        <td data-label="Nama Mahasantri">{{ $item->mhs_name }}</td>
                         <td data-label="Kelas">{{ $item->kelas->name }}</td>
                         <td data-label="Gender">{{ $item->mhs_gend }}</td>
                         <td data-label="Join Date">{{ \Carbon\Carbon::parse($item->created_at)->format('l, d M Y') }}</td>
-                        <td data-label="Status Mahasiswa">{{ $item->mhs_stat }}</td>
+                        <td data-label="Status Mahasantri">{{ $item->mhs_stat }}</td>
                         <td class="d-flex justify-content-center align-items-center">
                             <a href="#" style="margin-right: 10px" data-bs-toggle="modal" data-bs-target="#viewContact{{ $item->mhs_code }}" class="btn btn-outline-info"><i class="fas fa-phone"></i></a>
                             <a href="{{ route($prefix.'workers.student-edit', $item->mhs_code) }}" style="margin-right: 10px" class="btn btn-outline-primary"><i class="fas fa-edit"></i></a>
@@ -89,7 +89,7 @@
                 role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title" id="myModalLabel16">Import Mahasiswa</h4>
+                        <h4 class="modal-title" id="myModalLabel16">Import Mahasantri</h4>
                         <div class="">
 
                             <button type="submit" class="btn btn-outline-primary" >

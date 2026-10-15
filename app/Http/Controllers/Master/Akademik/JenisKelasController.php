@@ -21,7 +21,7 @@ class JenisKelasController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Jenis Kelas";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         $data['jenis_kelas'] = JenisKelas::all();
         
         return view('master.akademik.jenis-kelas-index', $data, compact('user'));
@@ -44,7 +44,7 @@ class JenisKelasController extends Controller
             JenisKelas::create([
                 'name' => $request->name,
                 'code' => $code,
-                'desc' => $request->desc,
+                'desc' => $request->desc ?? '', // Provide empty string if null
                 'status' => 'Aktif',
                 'created_by' => Auth::id(),
             ]);
@@ -75,7 +75,7 @@ class JenisKelasController extends Controller
 
             $jenisKelas->update([
                 'name' => $request->name,
-                'desc' => $request->desc,
+                'desc' => $request->desc ?? '', // Provide empty string if null
                 'status' => $request->status,
                 'updated_by' => Auth::id(),
             ]);

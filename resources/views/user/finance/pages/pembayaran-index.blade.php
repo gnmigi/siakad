@@ -87,7 +87,7 @@
                             <thead>
                                 <tr>
                                     <th class="text-center">#</th>
-                                    <th class="text-center">Nama Mahasiswa</th>
+                                    <th class="text-center">Nama Mahasantri</th>
                                     <th class="text-center">Kode Pembayaran</th>
                                     <th class="text-center">Kode Tagihan</th>
                                     <th class="text-center">Nominal Bayar</th>
@@ -99,7 +99,7 @@
                                 @foreach ($history as $key => $item)
                                     <tr>
                                         <td data-label="Number">{{ ++$key }}</td>
-                                        <td data-label="Nama Mahasiswa">{{ $item->users->mhs_name }}</td>
+                                        <td data-label="Nama Mahasantri">{{ $item->users->mhs_name }}</td>
                                         <td data-label="Kode Pembayaran"><span style="text-transform: uppercase">{{ $item->code }}</span></td>
                                         <td data-label="Kode Tagihan"><span style="text-transform: uppercase">{{ $item->tagihan_code }}</span></td>
                                         <td data-label="Nominal Bayar">Rp. {{ number_format($item->tagihan->price, 0, ',', '.') }}</td>

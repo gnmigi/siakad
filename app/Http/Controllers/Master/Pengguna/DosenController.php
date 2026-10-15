@@ -24,7 +24,7 @@ class DosenController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Dosen";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         $data['dosen'] = Dosen::latest()->get();
         
         return view('master.pengguna.dosen-index', $data, compact('user'));
@@ -37,7 +37,7 @@ class DosenController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Dosen";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         $data['dosen'] = Dosen::where('code', $code)->first();
         
         return view('master.pengguna.dosen-views', $data, compact('user'));

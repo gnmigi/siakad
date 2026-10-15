@@ -1,9 +1,9 @@
 @extends('base.base-dash-index')
 @section('title')
-    Data Pengguna Mahasiswa - Siakad By Internal Developer
+    Data Pengguna Mahasantri - Siakad By Internal Developer
 @endsection
 @section('menu')
-    Data Pengguna Mahasiswa
+    Data Pengguna Mahasantri
 @endsection
 @section('submenu')
     Edit {{ $student->mhs_name }}
@@ -211,7 +211,7 @@
                                     @enderror
                                 </div>
                                 <div class="form-group col-lg-6 col-12">
-                                    <label for="mhs_wali_name">Nama Wali Mahasiswa</label>
+                                    <label for="mhs_wali_name">Nama Wali Mahasantri</label>
                                     <input type="text" class="form-control" name="mhs_wali_name" id="mhs_wali_name" placeholder="nama wali..." value="{{ $student->mhs_wali_name }}">
                                     @error('mhs_wali_name')
                                         <small class="text-danger">{{ $message }}</small>
@@ -278,13 +278,13 @@
 
                                 </div>
                                 <div class="form-group col-lg-6 col-12">
-                                    <label for="mhs_stat">Pilih Status Mahasiswa</label>
+                                    <label for="mhs_stat">Pilih Status Mahasantri</label>
                                     <select name="mhs_stat" id="mhs_stat" class="form-select">
-                                        <option value="" selected>Pilih Status Mahasiswa</option>
-                                        <option value="0" {{ $student->raw_mhs_stat === 0 ? 'selected' : '' }}>Calon Mahasiswa</option>
-                                        <option value="1" {{ $student->raw_mhs_stat === 1 ? 'selected' : '' }}>Mahasiswa Aktif</option>
-                                        <option value="2" {{ $student->raw_mhs_stat === 2 ? 'selected' : '' }}>Mahasiswa Non-Aktif</option>
-                                        <option value="3" {{ $student->raw_mhs_stat === 3 ? 'selected' : '' }}>Mahasiswa Alumni</option>
+                                        <option value="" selected>Pilih Status Mahasantri</option>
+                                        <option value="0" {{ $student->raw_mhs_stat === 0 ? 'selected' : '' }}>Calon Mahasantri</option>
+                                        <option value="1" {{ $student->raw_mhs_stat === 1 ? 'selected' : '' }}>Mahasantri Aktif</option>
+                                        <option value="2" {{ $student->raw_mhs_stat === 2 ? 'selected' : '' }}>Mahasantri Non-Aktif</option>
+                                        <option value="3" {{ $student->raw_mhs_stat === 3 ? 'selected' : '' }}>Mahasantri Alumni</option>
 
 
                                     </select>

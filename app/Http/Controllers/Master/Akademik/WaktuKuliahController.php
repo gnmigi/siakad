@@ -22,7 +22,7 @@ class WaktuKuliahController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Waktu Kuliah";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         $data['waktu_kuliah'] = WaktuKuliah::with('jenisKelas')->get();
         $data['jenis_kelas'] = JenisKelas::where('status', 'Aktif')->get();
         

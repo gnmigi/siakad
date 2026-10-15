@@ -24,13 +24,76 @@ class MataKuliahController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Mata Kuliah";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         $data['mata_kuliah'] = MataKuliah::with(['kurikulum', 'programStudi', 'dosen1', 'dosen2', 'dosen3'])->get();
         $data['kurikulum'] = Kurikulum::where('status', 'Masih Berlaku')->get();
         $data['program_studi'] = ProgramStudi::where('status', 'Aktif')->get();
         $data['dosens'] = Dosen::all();
         
+        // Get unique semesters for filter dropdown
+        $data['semesters'] = MataKuliah::select('semester')
+            ->distinct()
+            ->orderBy('semester')
+            ->pluck('semester');
+        
         return view('master.akademik.mata-kuliah-index', $data, compact('user'));
+    }
+
+    public function getMataKuliahFiltered(Request $request)
+    {
+        try {
+            $query = MataKuliah::with(['kurikulum', 'programStudi', 'dosen1', 'dosen2', 'dosen3']);
+            
+            // Apply semester filter
+            if ($request->filled('semester') && $request->semester != '') {
+                $query->where('semester', $request->semester);
+            }
+            
+            // Apply program studi filter
+            if ($request->filled('prodi_id') && $request->prodi_id != '') {
+                $query->where('prodi_id', $request->prodi_id);
+            }
+            
+            // Apply search filter if provided
+            if ($request->filled('search') && $request->search != '') {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('code', 'like', "%{$search}%")
+                      ->orWhereHas('programStudi', function($subQ) use ($search) {
+                          $subQ->where('name', 'like', "%{$search}%");
+                      });
+                });
+            }
+            
+            $mataKuliah = $query->get();
+            
+            $data = [];
+            foreach ($mataKuliah as $key => $item) {
+                $data[] = [
+                    'no' => $key + 1,
+                    'name' => $item->name,
+                    'code' => $item->code,
+                    'program_studi' => $item->programStudi->name ?? '-',
+                    'semester' => $item->semester,
+                    'bsks' => $item->bsks,
+                    'status' => $item->status ?? 'Aktif',
+                    'actions' => view('master.akademik.partials.mata-kuliah-actions', compact('item'))->render()
+                ];
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+                'total' => count($data)
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching data: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function handleMataKuliah(Request $request)
@@ -40,6 +103,7 @@ class MataKuliahController extends Controller
 
             $request->validate([
                 'name' => 'required|string|max:255',
+                'code' => 'nullable|string|max:50|unique:mata_kuliahs,code',
                 'kurikulum_id' => 'required|integer',
                 'prodi_id' => 'required|integer',
                 'requi_id' => 'nullable|integer',
@@ -54,8 +118,10 @@ class MataKuliahController extends Controller
                 'docs_kontrak_kuliah' => 'nullable|file|mimes:pdf|max:2048',
             ]);
 
-            // Generate unique code
-            $code = 'MK-' . Str::random(8);
+            // Use manual code if provided, otherwise generate automatic code
+            $code = $request->filled('code') && !empty(trim($request->code)) 
+                ? trim($request->code) 
+                : 'MK-' . Str::random(8);
             
             // Handle file uploads
             $photo = $request->hasFile('photo') ? $request->file('photo')->store('mata-kuliah/photo', 'public') : 'default.png';
@@ -97,8 +163,11 @@ class MataKuliahController extends Controller
         try {
             DB::beginTransaction();
 
+            $mataKuliah = MataKuliah::where('code', $code)->firstOrFail();
+
             $request->validate([
                 'name' => 'required|string|max:255',
+                'code' => 'required|string|max:50|unique:mata_kuliahs,code,' . $mataKuliah->id,
                 'kurikulum_id' => 'required|integer',
                 'prodi_id' => 'required|integer',
                 'requi_id' => 'nullable|integer',
@@ -113,8 +182,6 @@ class MataKuliahController extends Controller
                 'docs_kontrak_kuliah' => 'nullable|file|mimes:pdf|max:2048',
             ]);
 
-            $mataKuliah = MataKuliah::where('code', $code)->firstOrFail();
-
             // Handle file uploads
             $photo = $request->hasFile('photo') ? $request->file('photo')->store('mata-kuliah/photo', 'public') : $mataKuliah->photo;
             $docs_rps = $request->hasFile('docs_rps') ? $request->file('docs_rps')->store('mata-kuliah/rps', 'public') : $mataKuliah->docs_rps;
@@ -122,6 +189,7 @@ class MataKuliahController extends Controller
 
             $mataKuliah->update([
                 'name' => $request->name,
+                'code' => trim($request->code), // Use the code from form input
                 'kurikulum_id' => $request->kurikulum_id,
                 'prodi_id' => $request->prodi_id,
                 'requi_id' => $request->requi_id,

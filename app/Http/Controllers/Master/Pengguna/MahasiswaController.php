@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 // Use Models
-use App\Models\Mahasiswa;
+use App\Models\Mahasantri;
 use App\Models\Akademik\ProgramStudi;
 use App\Models\Pengaturan\WebSetting;
 // Use Plugins
@@ -24,10 +24,12 @@ class MahasiswaController extends Controller
         $data['webs'] = WebSetting::first();
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
-        $data['pages'] = "Mahasiswa";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
-        $data['mahasiswa'] = Mahasiswa::all();
-        $data['prodi'] = ProgramStudi::all();
+        $data['pages'] = "Mahasantri";
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
+        
+        // Only get non-deleted data
+        $data['mahasiswa'] = Mahasantri::whereNull('deleted_at')->get();
+        $data['prodi'] = ProgramStudi::whereNull('deleted_at')->get();
         
         return view('master.pengguna.mahasiswa-index', $data, compact('user'));
     }
@@ -38,9 +40,9 @@ class MahasiswaController extends Controller
         $data['webs'] = WebSetting::first();
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
-        $data['pages'] = "Mahasiswa";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
-        $data['mahasiswa'] = Mahasiswa::where('code', $code)->first();
+        $data['pages'] = "Mahasantri";
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
+        $data['mahasiswa'] = Mahasantri::where('code', $code)->first();
         
         return view('master.pengguna.mahasiswa-views', $data, compact('user'));
     }
@@ -50,7 +52,7 @@ class MahasiswaController extends Controller
         try {
             DB::beginTransaction();
             
-            $mahasiswa = Mahasiswa::where('code', $code)->firstOrFail();
+            $mahasiswa = Mahasantri::where('code', $code)->firstOrFail();
             
             // Base validation rules
             $rules = [
@@ -194,27 +196,37 @@ class MahasiswaController extends Controller
         try {
             DB::beginTransaction();
             
-            $request->validate([
+            // Base validation rules
+            $rules = [
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:mahasiswas,email',
                 'phone' => 'required|string|unique:mahasiswas,phone',
                 'password' => 'required|string|min:6',
-                'numb_nim' => 'required|string|unique:mahasiswas,numb_nim',
-                'prodi_id' => 'required|exists:program_studis,id',
                 'type' => 'required|integer|in:0,1,2,3',
                 'semester' => 'required|integer|min:0|max:14'
-            ]);
+            ];
+            
+            // Conditional validation based on type
+            if ($request->type != '0') { // Not calon mahasiswa
+                $rules['numb_nim'] = 'required|string|unique:mahasiswas,numb_nim';
+                $rules['prodi_id'] = 'required|exists:program_studis,id';
+            } else { // Calon mahasiswa
+                $rules['numb_nim'] = 'nullable|string|unique:mahasiswas,numb_nim';
+                $rules['prodi_id'] = 'nullable|exists:program_studis,id';
+            }
+            
+            $request->validate($rules);
 
             $code = 'MHS-' . strtoupper(Str::random(8));
             
-            $mahasiswa = Mahasiswa::create([
+            $mahasiswa = Mahasantri::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'phone' => $request->phone,
                 'password' => Hash::make($request->password),
                 'code' => $code,
-                'numb_nim' => $request->numb_nim,
-                'prodi_id' => $request->prodi_id,
+                'numb_nim' => $request->filled('numb_nim') ? $request->numb_nim : null,
+                'prodi_id' => $request->filled('prodi_id') ? $request->prodi_id : null,
                 'type' => $request->type,
                 'semester' => $request->semester,
                 'created_by' => Auth::id()
@@ -222,7 +234,7 @@ class MahasiswaController extends Controller
 
             DB::commit();
             $spref = Auth::user() ? Auth::user()->prefix : '';
-            return redirect()->route($spref . 'pengguna.mahasiswa-render')->with('success', 'Mahasiswa berhasil ditambahkan');
+            return redirect()->route($spref . 'pengguna.mahasiswa-render')->with('success', 'Mahasantri berhasil ditambahkan');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
@@ -234,25 +246,35 @@ class MahasiswaController extends Controller
         try {
             DB::beginTransaction();
             
-            $mahasiswa = Mahasiswa::where('code', $code)->firstOrFail();
+            $mahasiswa = Mahasantri::where('code', $code)->firstOrFail();
             
-            $request->validate([
+            // Base validation rules
+            $rules = [
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:mahasiswas,email,' . $mahasiswa->id,
                 'phone' => 'required|string|unique:mahasiswas,phone,' . $mahasiswa->id,
                 'password' => 'nullable|string|min:6',
-                'numb_nim' => 'required|string|unique:mahasiswas,numb_nim,' . $mahasiswa->id,
-                'prodi_id' => 'required|exists:program_studis,id',
                 'type' => 'required|integer|in:0,1,2,3',
                 'semester' => 'required|integer|min:0|max:14'
-            ]);
+            ];
+            
+            // Conditional validation based on type
+            if ($request->type != '0') { // Not calon mahasiswa
+                $rules['numb_nim'] = 'required|string|unique:mahasiswas,numb_nim,' . $mahasiswa->id;
+                $rules['prodi_id'] = 'required|exists:program_studis,id';
+            } else { // Calon mahasiswa
+                $rules['numb_nim'] = 'nullable|string|unique:mahasiswas,numb_nim,' . $mahasiswa->id;
+                $rules['prodi_id'] = 'nullable|exists:program_studis,id';
+            }
+            
+            $request->validate($rules);
 
             $updateData = [
                 'name' => $request->name,
                 'email' => $request->email,
                 'phone' => $request->phone,
-                'numb_nim' => $request->numb_nim,
-                'prodi_id' => $request->prodi_id,
+                'numb_nim' => $request->filled('numb_nim') ? $request->numb_nim : null,
+                'prodi_id' => $request->filled('prodi_id') ? $request->prodi_id : null,
                 'type' => $request->type,
                 'semester' => $request->semester,
                 'updated_by' => Auth::id()
@@ -278,7 +300,7 @@ class MahasiswaController extends Controller
         try {
             DB::beginTransaction();
 
-            $mahasiswa = Mahasiswa::where('code', $code)->firstOrFail();
+            $mahasiswa = Mahasantri::where('code', $code)->firstOrFail();
             
             // Prevent self-deletion
             if ($mahasiswa->id === Auth::id()) {
@@ -288,14 +310,114 @@ class MahasiswaController extends Controller
             $mahasiswa->update([
                 'deleted_by' => Auth::id()
             ]);
+            
+            // Soft delete (data masih ada di database dengan deleted_at timestamp)
             $mahasiswa->delete();
 
             DB::commit();
-            return redirect()->back()->with('success', 'Mahasiswa berhasil dihapus');
+            return redirect()->back()->with('success', 'Mahasantri berhasil dihapus (soft delete)');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Gagal menghapus Mahasiswa: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menghapus Mahasantri: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Force delete mahasiswa (permanent deletion)
+     */
+    public function forceDeleteMahasiswa($code)
+    {
+        try {
+            DB::beginTransaction();
+
+            $mahasiswa = Mahasantri::withTrashed()->where('code', $code)->firstOrFail();
+            
+            // Prevent self-deletion
+            if ($mahasiswa->id === Auth::id()) {
+                return redirect()->back()->with('error', 'Tidak dapat menghapus akun sendiri');
+            }
+
+            // Force delete (permanent deletion from database)
+            $mahasiswa->forceDelete();
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Mahasantri berhasil dihapus permanen dari database');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal menghapus Mahasantri permanen: ' . $e->getMessage());
+        }
+    }
+
+    public function softDeleteMahasiswa($code)
+    {
+        try {
+            DB::beginTransaction();
+
+            $mahasiswa = Mahasantri::where('code', $code)->firstOrFail();
+            
+            // Prevent self-deletion
+            if ($mahasiswa->id === Auth::id()) {
+                return redirect()->back()->with('error', 'Tidak dapat menghapus akun sendiri');
+            }
+
+            $mahasiswa->update([
+                'deleted_by' => Auth::id()
+            ]);
+            
+            // Soft delete (hanya menandai sebagai deleted)
+            $mahasiswa->delete();
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Mahasantri berhasil dinonaktifkan (soft delete)');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal menghapus Mahasantri: ' . $e->getMessage());
+        }
+    }
+
+    public function restoreMahasiswa($code)
+    {
+        try {
+            DB::beginTransaction();
+
+            $mahasiswa = Mahasantri::withTrashed()->where('code', $code)->firstOrFail();
+            
+            $mahasiswa->restore();
+            $mahasiswa->update([
+                'updated_by' => Auth::id()
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Mahasantri berhasil dipulihkan');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal memulihkan Mahasantri: ' . $e->getMessage());
+        }
+    }
+
+    public function resetPassword($code)
+    {
+        try {
+            DB::beginTransaction();
+
+            $mahasiswa = Mahasantri::where('code', $code)->firstOrFail();
+            
+            // Reset password to default
+            $mahasiswa->update([
+                'password' => Hash::make('12345678'),
+                'updated_by' => Auth::id()
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Password mahasiswa berhasil direset ke: 12345678');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal reset password: ' . $e->getMessage());
         }
     }
 }

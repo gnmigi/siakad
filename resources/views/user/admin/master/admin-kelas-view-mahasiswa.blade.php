@@ -1,18 +1,18 @@
 @extends('base.base-dash-index')
 @section('title')
-    Daftar Mahasiswa Kelas {{ $kelas->name }} - Siakad By Internal Developer
+    Daftar Mahasantri Kelas {{ $kelas->name }} - Siakad By Internal Developer
 @endsection
 @section('menu')
     Data Kelas
 @endsection
 @section('submenu')
-    Daftar Mahasiswa Kelas {{ $kelas->name }}
+    Daftar Mahasantri Kelas {{ $kelas->name }}
 @endsection
 @section('urlmenu')
     #
 @endsection
 @section('subdesc')
-    Halaman untuk melihat data Mahasiswa pada kelas {{ $kelas->name }}
+    Halaman untuk melihat data Mahasantri pada kelas {{ $kelas->name }}
 @endsection
 @section('custom-css')
 <style>
@@ -119,7 +119,7 @@ table th {
                     <tr>
                         <th class="text-center">#</th>
                         <th class="text-center">Nomor NIM</th>
-                        <th class="text-center">Nama Mahasiswa</th>
+                        <th class="text-center">Nama Mahasantri</th>
                         <th class="text-center">Gender</th>
                         <th class="text-center">Kehadiran</th>
                         <th class="text-center">Presentase Kehadiran</th>
@@ -131,7 +131,7 @@ table th {
                     <tr>
                         <td data-label="Number">{{ ++$key }}</td>
                         <td data-label="Nomor NIM">{{ $item->mhs_nim }}</td>
-                        <td data-label="Nama Mahasiswa">{{ $item->mhs_name }}</td>
+                        <td data-label="Nama Mahasantri">{{ $item->mhs_name }}</td>
                         <td data-label="Jenis Kelamin">{{ $item->mhs_gend == null ? '-' : $item->mhs_gend }}</td>
                         @php  
                             $dateNow  = \Carbon\Carbon::now()->format('m-d-Y');
@@ -184,7 +184,7 @@ table th {
                 role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title" id="myModalLabel16">Edit Data Mahasiswa - {{ $item->mhs_name }} </h4>
+                        <h4 class="modal-title" id="myModalLabel16">Edit Data Mahasantri - {{ $item->mhs_name }} </h4>
                         <div class="">
     
                             <button type="submit" class="btn btn-outline-primary mt-1" >

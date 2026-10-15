@@ -1,23 +1,34 @@
 <?php
 
 namespace App\Models\PMB;
-// USE SYSTEM
-use Illuminate\Database\Eloquent\SoftDeletes;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\HasLogAktivitas;
-// USE MODELS
-use App\Models\Akademik\TahunAkademik;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PeriodePendaftaran extends Model
 {
-    use SoftDeletes, HasLogAktivitas;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'periode_pendaftarans';
-    protected $guarded = [];
 
-    public function taka()
+    protected $fillable = [
+        'taka_id',
+        'name',
+        'code',
+        'desc',
+        'start_date',
+        'ended_date',
+        'created_by',
+        'updated_by',
+        'deleted_by'
+    ];
+
+    protected $dates = ['start_date', 'ended_date', 'deleted_at'];
+
+    public function pendaftar()
     {
-        return $this->belongsTo(TahunAkademik::class, 'taka_id');
+        return $this->hasMany(Pendaftar::class, 'periode_id');
     }
 
     public function jalurs()

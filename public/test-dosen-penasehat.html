@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dosen Penasehat Search Test</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h2>Test Dosen Penasehat Search Functionality</h2>
+    
+    <div id="test-results"></div>
+    
+    <script>
+        $(document).ready(function() {
+            var results = $("#test-results");
+            
+            // Test 1: Check if the page loads
+            results.append("<p>✓ Page loaded successfully</p>");
+            
+            // Test 2: Try to access the dosen penasehat page
+            var testUrls = [
+                "/akademik/dosen-penasehat",
+                "/akademik/dosen-penasehat?search=test",
+                "/akademik/dosen-penasehat?prodi_id=1",
+                "/akademik/dosen-penasehat?search=john&status=tanpa_penasehat"
+            ];
+            
+            results.append("<h3>Test URLs to try manually:</h3>");
+            testUrls.forEach(function(url) {
+                results.append("<p><a href=\"" + url + "\" target=\"_blank\">" + url + "</a></p>");
+            });
+            
+            results.append("<h3>Instructions:</h3>");
+            results.append("<ol>");
+            results.append("<li>Click on each URL above to test</li>");
+            results.append("<li>On the dosen penasehat page, try typing in the search box</li>");
+            results.append("<li>Press Enter or click the search button</li>");
+            results.append("<li>Check browser console (F12) for any error messages</li>");
+            results.append("<li>Verify the URL changes with search parameters</li>");
+            results.append("</ol>");
+        });
+    </script>
+</body>
+</html>

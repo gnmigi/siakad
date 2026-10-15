@@ -1,0 +1,519 @@
+<?php
+
+namespace App\Http\Controllers\Master\Akademik;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+// Use Models
+use App\Models\Mahasantri;
+use App\Models\Akademik\ProgramStudi;
+use App\Models\Akademik\TahunAkademik;
+use App\Models\Akademik\Kelas;
+use App\Models\Akademik\TakhassusProgramStudi;
+use App\Models\Pengaturan\WebSetting;
+use Maatwebsite\Excel\Facades\Excel;
+use PDF; // Assuming dompdf is aliased as PDF in config/app.php
+use App\Imports\MahasiswaImport;
+use Illuminate\Support\Facades\Validator;
+
+class DataAkademikMahasiswaController extends Controller
+{
+    public function renderDataAkademikMahasiswa(Request $request)
+    {
+        $user = Auth::user();
+        $data['webs'] = WebSetting::first();
+        $data['spref'] = $user ? $user->prefix : '';
+        $data['menus'] = "Master";
+        $data['pages'] = "Data Akademik Mahasantri";
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
+        
+        // Build query with filters
+        $query = Mahasantri::with(['prodi', 'kelas.taka', 'kelas.pstudi', 'kelas.jenisKelas', 'takhasusOption']);
+        
+        // Apply filters
+        if ($request->filled('prodi_filter')) {
+            $query->where('prodi_id', $request->prodi_filter);
+        }
+        
+        if ($request->filled('kelas_filter')) {
+            $query->where('kelas_id', $request->kelas_filter);
+        }
+        
+        if ($request->filled('semester_filter')) {
+            $query->where('semester', $request->semester_filter);
+        }
+        
+        if ($request->filled('takhasus_filter')) {
+            $query->where('takhasus', 'LIKE', '%' . $request->takhasus_filter . '%');
+        }
+        
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'LIKE', '%' . $search . '%')
+                  ->orWhere('email', 'LIKE', '%' . $search . '%')
+                  ->orWhere('numb_nim', 'LIKE', '%' . $search . '%');
+            });
+        }
+        
+        $data['mahasiswa'] = $query->get();
+        $data['program_studi'] = ProgramStudi::where('status', 'Aktif')->get();
+        $data['tahun_akademik'] = TahunAkademik::where('status', 'Aktif')->get();
+        $data['kelas'] = Kelas::with(['pstudi', 'taka', 'jenisKelas'])->get();
+        
+        // Get unique takhasus values for filter dropdown
+        $data['takhasus_list'] = Mahasantri::whereNotNull('takhasus')
+            ->where('takhasus', '!=', '')
+            ->distinct()
+            ->pluck('takhasus')
+            ->sort();
+        
+        // Get unique semester values from actual data
+        $data['semester_list'] = Mahasantri::whereNotNull('semester')
+            ->where('semester', '!=', '')
+            ->distinct()
+            ->pluck('semester')
+            ->sort()
+            ->values();
+        
+        // Pass current filters to view
+        $data['current_filters'] = [
+            'prodi_filter' => $request->prodi_filter,
+            'kelas_filter' => $request->kelas_filter,
+            'semester_filter' => $request->semester_filter,
+            'takhasus_filter' => $request->takhasus_filter,
+            'search' => $request->search,
+        ];
+        
+        return view('master.akademik.data-akademik-mahasiswa-index', $data, compact('user'));
+    }
+
+    public function updateDataAkademikMahasiswa(Request $request, $code)
+    {
+        try {
+            DB::beginTransaction();
+
+            $request->validate([
+                'numb_nim' => 'required|string|max:20|unique:mahasiswas,numb_nim,' . $code . ',code',
+                'prodi_id' => 'required|exists:program_studis,id',
+                'kelas_id' => 'required|exists:kelas,id',
+                'semester' => 'required|integer|min:1|max:14',
+                'takhasus_id' => 'nullable|exists:takhasus_program_studis,id',
+            ]);
+
+            $mahasiswa = Mahasantri::where('code', $code)->firstOrFail();
+
+            // Get takhasus name if takhasus_id is provided
+            $takhasusName = '';
+            if ($request->takhasus_id) {
+                $takhasusOption = TakhassusProgramStudi::find($request->takhasus_id);
+                $takhasusName = $takhasusOption ? $takhasusOption->name : '';
+            }
+
+            $mahasiswa->update([
+                'numb_nim' => $request->numb_nim,
+                'prodi_id' => $request->prodi_id,
+                'kelas_id' => $request->kelas_id,
+                'semester' => $request->semester,
+                'takhasus_id' => $request->takhasus_id,
+                'takhasus' => $takhasusName, // Keep the old field for backward compatibility
+                'updated_by' => Auth::id(),
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Data Akademik Mahasantri berhasil diperbarui');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', 'Gagal memperbarui Data Akademik Mahasantri: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    public function getTakhasusOptions(Request $request)
+    {
+        $prodiId = $request->get('prodi_id');
+        
+        if (!$prodiId) {
+            return response()->json([]);
+        }
+
+        $takhasusOptions = TakhassusProgramStudi::where('program_studi_id', $prodiId)
+            ->where('status', 'Aktif')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json($takhasusOptions);
+    }
+
+    public function updateProfileMahasiswa(Request $request, $code)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Validasi input
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:mahasiswas,email,' . $code . ',code',
+                'phone' => 'required|string|unique:mahasiswas,phone,' . $code . ',code',
+                'bio_gender' => 'nullable|in:Laki-laki,Perempuan',
+                'bio_placebirth' => 'nullable|string|max:255',
+                'bio_datebirth' => 'nullable|date',
+                'bio_religion' => 'nullable|string|max:255',
+                'bio_nationality' => 'nullable|string|max:255',
+                'numb_ktp' => 'nullable|string|unique:mahasiswas,numb_ktp,' . $code . ',code',
+                'numb_kk' => 'nullable|string|unique:mahasiswas,numb_kk,' . $code . ',code',
+                'numb_nisn' => 'nullable|string|unique:mahasiswas,numb_nisn,' . $code . ',code',
+                'ktp_addres' => 'nullable|string',
+                'ktp_rt' => 'nullable|string|max:10',
+                'ktp_rw' => 'nullable|string|max:10',
+                'ktp_village' => 'nullable|string|max:255',
+                'ktp_subdistrict' => 'nullable|string|max:255',
+                'ktp_city' => 'nullable|string|max:255',
+                'ktp_province' => 'nullable|string|max:255',
+                'ktp_poscode' => 'nullable|string|max:10',
+                'father_name' => 'nullable|string|max:255',
+                'mother_name' => 'nullable|string|max:255',
+                'father_phone' => 'nullable|string|max:20',
+                'mother_phone' => 'nullable|string|max:20',
+                'father_occupation' => 'nullable|string|max:255',
+                'mother_occupation' => 'nullable|string|max:255',
+                'edu1_type' => 'nullable|in:SMA/SMK,Diploma,Sarjana,Magister,Doktor',
+                'edu1_place' => 'nullable|string|max:255',
+                'edu1_major' => 'nullable|string|max:255',
+                'edu1_graduate_year' => 'nullable|string|max:4',
+            ]);
+
+            // Cari mahasiswa berdasarkan code
+            $mahasiswa = Mahasantri::where('code', $code)->firstOrFail();
+
+            // Update data profile mahasiswa
+            $mahasiswa->update([
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'bio_gender' => $request->bio_gender,
+                'bio_placebirth' => $request->bio_placebirth,
+                'bio_datebirth' => $request->bio_datebirth,
+                'bio_religion' => $request->bio_religion,
+                'bio_nationality' => $request->bio_nationality ?? 'Indonesia',
+                'numb_ktp' => $request->numb_ktp,
+                'numb_kk' => $request->numb_kk,
+                'numb_nisn' => $request->numb_nisn,
+                'ktp_addres' => $request->ktp_addres,
+                'ktp_rt' => $request->ktp_rt,
+                'ktp_rw' => $request->ktp_rw,
+                'ktp_village' => $request->ktp_village,
+                'ktp_subdistrict' => $request->ktp_subdistrict,
+                'ktp_city' => $request->ktp_city,
+                'ktp_province' => $request->ktp_province,
+                'ktp_poscode' => $request->ktp_poscode,
+                'father_name' => $request->father_name,
+                'mother_name' => $request->mother_name,
+                'father_phone' => $request->father_phone,
+                'mother_phone' => $request->mother_phone,
+                'father_occupation' => $request->father_occupation,
+                'mother_occupation' => $request->mother_occupation,
+                'edu1_type' => $request->edu1_type ?? 'SMA/SMK',
+                'edu1_place' => $request->edu1_place,
+                'edu1_major' => $request->edu1_major,
+                'edu1_graduate_year' => $request->edu1_graduate_year,
+                'updated_by' => Auth::id()
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Profile mahasiswa berhasil diperbarui');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', 'Gagal memperbarui profile mahasiswa: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    public function exportDataAkademikMahasiswa(Request $request)
+    {
+        $format = $request->get('format', 'excel');
+
+        // Build query with filters
+        $query = Mahasantri::with(['prodi', 'kelas.jenisKelas']);
+
+        if ($request->filled('prodi_filter')) {
+            $query->where('prodi_id', $request->prodi_filter);
+        }
+
+        if ($request->filled('kelas_filter')) {
+            $query->where('kelas_id', $request->kelas_filter);
+        }
+
+        if ($request->filled('semester_filter')) {
+            $query->where('semester', $request->semester_filter);
+        }
+
+        if ($request->filled('takhasus_filter')) {
+            $query->where('takhasus', 'LIKE', '%' . $request->takhasus_filter . '%');
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'LIKE', '%' . $search . '%')
+                  ->orWhere('email', 'LIKE', '%' . $search . '%')
+                  ->orWhere('numb_nim', 'LIKE', '%' . $search . '%');
+            });
+        }
+
+        $mahasiswa = $query->get();
+
+        if ($format === 'excel') {
+            // Group by kelas name with jenis kelas
+            $grouped = $mahasiswa->groupBy(function($item) {
+                if ($item->kelas) {
+                    $jenisKelas = $item->kelas->jenisKelas ? $item->kelas->jenisKelas->name : 'Reguler';
+                    return $item->kelas->name . ' - ' . $jenisKelas;
+                }
+                return 'Tanpa Kelas';
+            });
+
+            return Excel::download(new \App\Exports\MahasiswaGroupedExport($grouped), 'data-mahasiswa-' . date('Ymd') . '.xlsx');
+        } elseif ($format === 'pdf') {
+            // Group by kelas name with jenis kelas
+            $grouped = $mahasiswa->groupBy(function($item) {
+                if ($item->kelas) {
+                    $jenisKelas = $item->kelas->jenisKelas ? $item->kelas->jenisKelas->name : 'Reguler';
+                    return $item->kelas->name . ' - ' . $jenisKelas;
+                }
+                return 'Tanpa Kelas';
+            });
+
+            $pdf = PDF::loadView('master.akademik.data-akademik-mahasiswa-pdf', compact('grouped'));
+            return $pdf->download('data-mahasiswa-' . date('Ymd') . '.pdf');
+        } else {
+            return redirect()->back()->with('error', 'Format export tidak didukung');
+        }
+    }
+
+    public function importDataAkademikMahasiswa(Request $request)
+    {
+        $request->validate([
+            'import_file' => 'required|file|mimes:xlsx',
+            'replace_existing' => 'nullable|boolean',
+        ], [
+            'import_file.required' => 'File import wajib dipilih',
+            'import_file.file' => 'File yang dipilih tidak valid',
+            'import_file.mimes' => 'File harus berformat Excel (.xlsx)',
+        ]);
+
+        $replaceExisting = $request->has('replace_existing') && $request->replace_existing;
+
+        try {
+            DB::beginTransaction();
+            
+            $import = new MahasiswaImport($replaceExisting);
+            Excel::import($import, $request->file('import_file'));
+            
+            DB::commit();
+            
+            // Get import statistics
+            $stats = $import->getImportStats();
+            
+            $message = "Import berhasil diselesaikan!\n\n";
+            $message .= "📊 STATISTIK IMPORT:\n";
+            $message .= "✅ Data berhasil diimport: {$stats['imported']}\n";
+            $message .= "⏭️ Data dilewati (duplikat): {$stats['skipped']}\n";
+            $message .= "🔄 Data diperbarui: {$stats['updated']}\n";
+            $message .= "❌ Data gagal diproses: {$stats['failed']}\n";
+            
+            if (!empty($stats['errors'])) {
+                $message .= "\n⚠️ DETAIL ERROR:\n";
+                foreach ($stats['errors'] as $error) {
+                    $message .= "• {$error}\n";
+                }
+            }
+            
+            if (!empty($stats['warnings'])) {
+                $message .= "\n⚠️ PERINGATAN:\n";
+                foreach ($stats['warnings'] as $warning) {
+                    $message .= "• {$warning}\n";
+                }
+            }
+
+            return redirect()->back()->with('success', $message);
+            
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            DB::rollBack();
+            
+            $failures = $e->failures();
+            $errorMessage = "❌ VALIDASI EXCEL GAGAL!\n\n";
+            $errorMessage .= "📋 DETAIL ERROR PER BARIS:\n";
+            
+            foreach ($failures as $failure) {
+                $errorMessage .= "🔸 Baris {$failure->row()}:\n";
+                $errorMessage .= "   Kolom: " . implode(', ', $failure->attribute()) . "\n";
+                $errorMessage .= "   Error: " . implode(', ', $failure->errors()) . "\n";
+                $errorMessage .= "   Nilai: " . json_encode($failure->values()) . "\n\n";
+            }
+            
+            return redirect()->back()->with('error', $errorMessage);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            $errorMessage = "❌ IMPORT GAGAL!\n\n";
+            
+            // Categorize different types of errors
+            if (strpos($e->getMessage(), 'Integrity constraint violation') !== false) {
+                if (strpos($e->getMessage(), 'email_unique') !== false) {
+                    $errorMessage .= "🔸 Jenis Error: Duplikasi Email\n";
+                    $errorMessage .= "📧 Email yang sama sudah ada di database\n";
+                    $errorMessage .= "💡 Solusi: Centang opsi 'Replace Data yang Ada' atau gunakan email yang berbeda\n";
+                } elseif (strpos($e->getMessage(), 'phone_unique') !== false) {
+                    $errorMessage .= "🔸 Jenis Error: Duplikasi Nomor Telepon\n";
+                    $errorMessage .= "📱 Nomor telepon yang sama sudah ada di database\n";
+                    $errorMessage .= "💡 Solusi: Centang opsi 'Replace Data yang Ada' atau gunakan nomor yang berbeda\n";
+                } elseif (strpos($e->getMessage(), 'nim_unique') !== false) {
+                    $errorMessage .= "🔸 Jenis Error: Duplikasi NIM\n";
+                    $errorMessage .= "🎓 NIM yang sama sudah ada di database\n";
+                    $errorMessage .= "💡 Solusi: Centang opsi 'Replace Data yang Ada' atau gunakan NIM yang berbeda\n";
+                } else {
+                    $errorMessage .= "🔸 Jenis Error: Duplikasi Data\n";
+                    $errorMessage .= "📋 Ada data yang sama sudah ada di database\n";
+                    $errorMessage .= "💡 Solusi: Centang opsi 'Replace Data yang Ada'\n";
+                }
+            } elseif (strpos($e->getMessage(), 'Foreign key constraint') !== false) {
+                $errorMessage .= "🔸 Jenis Error: Referensi Data Tidak Valid\n";
+                $errorMessage .= "🔗 Program Studi atau Kelas yang direferensikan tidak ditemukan\n";
+                $errorMessage .= "💡 Solusi: Pastikan Program Studi dan Kelas sudah ada di sistem\n";
+            } elseif (strpos($e->getMessage(), 'Column') !== false && strpos($e->getMessage(), 'cannot be null') !== false) {
+                $errorMessage .= "🔸 Jenis Error: Data Wajib Kosong\n";
+                $errorMessage .= "📝 Ada kolom wajib yang tidak diisi\n";
+                $errorMessage .= "💡 Solusi: Pastikan kolom Nama, Email, dan NIM terisi\n";
+            } else {
+                $errorMessage .= "🔸 Jenis Error: Error Sistem\n";
+                $errorMessage .= "⚙️ Terjadi kesalahan teknis saat memproses data\n";
+            }
+            
+            $errorMessage .= "\n🔍 Detail Teknis:\n";
+            $errorMessage .= $e->getMessage();
+            
+            return redirect()->back()->with('error', $errorMessage);
+        }
+    }
+
+    public function toggleTerminal(Request $request, $code)
+    {
+        try {
+            DB::beginTransaction();
+
+            $request->validate([
+                'terminal_reason' => 'required_if:action,activate|string|max:500',
+                'action' => 'required|in:activate,deactivate'
+            ], [
+                'terminal_reason.required_if' => 'Alasan terminal wajib diisi saat mengaktifkan terminal',
+                'terminal_reason.max' => 'Alasan terminal maksimal 500 karakter',
+                'action.required' => 'Aksi terminal harus dipilih',
+                'action.in' => 'Aksi terminal tidak valid'
+            ]);
+
+            $mahasiswa = Mahasantri::where('code', $code)->firstOrFail();
+
+            if ($request->action === 'activate') {
+                // Activate terminal
+                $mahasiswa->update([
+                    'is_terminated' => true,
+                    'termination_reason' => $request->terminal_reason,
+                    'terminated_at' => now(),
+                    'terminated_by' => Auth::id(),
+                ]);
+
+                $message = 'Terminal berhasil diaktifkan untuk ' . $mahasiswa->name;
+                $logMessage = 'Terminal diaktifkan dengan alasan: ' . $request->terminal_reason;
+            } else {
+                // Deactivate terminal
+                $mahasiswa->update([
+                    'is_terminated' => false,
+                    'termination_reason' => null,
+                    'terminated_at' => null,
+                    'terminated_by' => null,
+                ]);
+
+                $message = 'Terminal berhasil dinonaktifkan untuk ' . $mahasiswa->name;
+                $logMessage = 'Terminal dinonaktifkan';
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', 'Gagal mengubah status terminal: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    public function searchMahasiswa(Request $request)
+    {
+        $searchTerm = $request->input('search', '');
+        
+        // Build query with search filters
+        $query = Mahasantri::with(['prodi', 'kelas.jenisKelas', 'takhasusOption']);
+        
+        if (!empty($searchTerm)) {
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('name', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('email', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('numb_nim', 'LIKE', '%' . $searchTerm . '%');
+            });
+        }
+        
+        // Apply other filters if present
+        if ($request->filled('prodi_filter')) {
+            $query->where('prodi_id', $request->prodi_filter);
+        }
+        
+        if ($request->filled('kelas_filter')) {
+            $query->where('kelas_id', $request->kelas_filter);
+        }
+        
+        if ($request->filled('semester_filter')) {
+            $query->where('semester', $request->semester_filter);
+        }
+        
+        if ($request->filled('takhasus_filter')) {
+            $query->where('takhasus', 'LIKE', '%' . $request->takhasus_filter . '%');
+        }
+        
+        $mahasiswa = $query->get();
+        
+        // Format data for JSON response
+        $formattedData = $mahasiswa->map(function($item, $key) {
+            return [
+                'no' => $key + 1,
+                'code' => $item->code,
+                'name' => $item->name,
+                'email' => $item->email,
+                'photo' => $item->photo,
+                'numb_nim' => $item->numb_nim,
+                'prodi_name' => $item->prodi->name ?? '-',
+                'kelas_name' => $item->kelas ? $item->kelas->name . ' - ' . ($item->kelas->jenisKelas->name ?? 'Reguler') : '-',
+                'semester' => $item->semester ?? '-',
+                'takhasus' => $item->takhasusOption->name ?? $item->takhasus ?? '-',
+                'terminal_status' => $item->getTerminalStatusBadge(),
+                'terminal_date' => $item->terminal_date ? $item->terminal_date->format('d/m/Y') : '-',
+                'is_terminal' => $item->isTerminal()
+            ];
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $formattedData,
+            'total' => $formattedData->count()
+        ]);
+    }
+}

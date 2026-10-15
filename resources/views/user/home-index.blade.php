@@ -49,7 +49,7 @@
                                 <div class="card btn btn-outline-success">
                                     <div class="card-body d-flex justify-content-around align-items-center">
                                         <span class="icon" style="margin-right: 25px;"><i class="fa-solid fa-user-graduate" style="font-size: 42px"></i></span>
-                                        <span class="text-putih" style="margin-left: 25px; font-size: 16px;">{{ \App\Models\Mahasiswa::all()->count() }} <br> Mahasiswa</span>
+                                        <span class="text-putih" style="margin-left: 25px; font-size: 16px;">{{ \App\Models\Mahasantri::all()->count() }} <br> Mahasantri</span>
                                     </div>
                                 </div>
                             </a>
@@ -250,7 +250,7 @@
                             <div id="genderMhsChart"></div>
                         </div>
                         <div class="text-center">
-                            <small>Grafik Presentasi Gender Mahasiswa</small>
+                            <small>Grafik Presentasi Gender Mahasantri</small>
                         </div>
                         <hr>
                         <div class="form-group">

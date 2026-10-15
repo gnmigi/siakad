@@ -24,7 +24,7 @@ class RuangController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Ruang";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         $data['ruangs'] = Ruang::with('gedung')->latest()->get();
         $data['gedungs'] = Gedung::all();
         

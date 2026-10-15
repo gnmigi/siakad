@@ -48,7 +48,7 @@ class PublikasiSeeder extends Seeder
                 'desc' => 'Kategori untuk berita dan galeri terkait kegiatan dan prestasi alumni.',
             ],
             [
-                'name' => 'Penerimaan Mahasiswa',
+                'name' => 'Penerimaan Mahasantri',
                 'desc' => 'Kategori untuk berita dan pengumuman terkait penerimaan mahasiswa baru dan informasi pendaftaran.',
             ],
             [

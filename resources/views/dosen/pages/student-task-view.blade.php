@@ -3,16 +3,16 @@
     Kelola Tugas - Siakad By Internal Developer
 @endsection
 @section('menu')
-    Kumpulan Tugas Mahasiswa
+    Kumpulan Tugas Mahasantri
 @endsection
 @section('submenu')
-    Lihat Daftar Kumpulan Tugas Mahasiswa
+    Lihat Daftar Kumpulan Tugas Mahasantri
 @endsection
 @section('urlmenu')
     {{ route('dosen.akademik.stask-index') }}
 @endsection
 @section('subdesc')
-    Lihat Daftar Kumpulan Tugas Mahasiswa
+    Lihat Daftar Kumpulan Tugas Mahasantri
 @endsection
 @section('content')
     <section class="content">
@@ -35,7 +35,7 @@
                                     <th class="text-center">#</th>
                                     <th class="text-center">Nama Mata Kuliah</th>
                                     <th class="text-center">Judul Tugas</th>
-                                    <th class="text-center">Nama Mahasiswa</th>
+                                    <th class="text-center">Nama Mahasantri</th>
                                     <th class="text-center">Score Tugas</th>
                                     <th class="text-center">Waktu Kirim</th>
                                     <th class="text-center">Button</th>
@@ -47,7 +47,7 @@
                                         <td data-label="Number">{{ ++$key }}</td>
                                         <td data-label="Nama Mata Kuliah">{{ $item->task->jadkul->matkul->name }} <br> {{ $item->task->jadkul->pert_id }}</td>
                                         <td data-label="Judul Tugas">{{ $item->task->title }}</td>
-                                        <td data-label="Nama Mahasiswa">{{ $item->student->mhs_name }}</td>
+                                        <td data-label="Nama Mahasantri">{{ $item->student->mhs_name }}</td>
                                         <td data-label="Score Tugas">{{ $item->score != null ? $item->score : '-'}}</td>
                                         <td data-label="Waktu Kirim">{{ \Carbon\Carbon::parse($item->created_at)->isoFormat('dddd, D MMMM Y') }} <br> {{ \Carbon\Carbon::parse($item->created_at)->format('H:i') }}</td>
                                         <td class="d-flex justify-content-center align-items-center">

@@ -52,9 +52,16 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Detail Tagihan Kuliah Group - {{ $group->code }}</h5>
-                    <a href="{{ route($spref . 'keuangan.tagihan-kuliah-group-render') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Kembali
-                    </a>
+                    <div class="btn-group">
+                        @if($group->status === 'Published')
+                        <a href="{{ route('keuangan.tagihan-kuliah-group-bulk-operations', $group->code) }}" class="btn btn-warning">
+                            <i class="fas fa-edit me-2"></i>Bulk Operations
+                        </a>
+                        @endif
+                        <a href="{{ route('keuangan.tagihan-kuliah-group-render') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Kembali
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     <!-- Group Info -->
@@ -76,32 +83,84 @@
                                 </tr>
                                 <tr>
                                     <td>Tenggat Waktu</td>
-                                    <td>: {{ \Carbon\Carbon::parse($group->due_date)->format('d M Y') }}</td>
+                                    <td>: 
+                                        @php
+                                            // Get unique due dates from tagihan
+                                            $dueDates = $tagihans->pluck('due_date')->filter()->unique();
+                                            $noDueDateCount = $tagihans->where('due_date', null)->count();
+                                            $totalTagihan = $tagihans->count();
+                                        @endphp
+                                        @if($noDueDateCount == $totalTagihan)
+                                            <span class="text-info"><i class="fas fa-infinity me-1"></i>Semua tanpa tempo</span>
+                                        @elseif($noDueDateCount > 0 && $dueDates->count() > 0)
+                                            <span class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>Campuran: {{ $noDueDateCount }} tanpa tempo, {{ $totalTagihan - $noDueDateCount }} dengan tempo</span>
+                                        @elseif($dueDates->count() == 1)
+                                            <span class="text-success"><i class="fas fa-calendar me-1"></i>{{ \Carbon\Carbon::parse($dueDates->first())->format('d M Y') }}</span>
+                                        @elseif($dueDates->count() > 1)
+                                            <span class="text-info"><i class="fas fa-calendar-alt me-1"></i>Beragam ({{ $dueDates->count() }} tanggal berbeda)</span>
+                                        @else
+                                            @if($group->due_date)
+                                                <span class="text-success"><i class="fas fa-calendar me-1"></i>{{ \Carbon\Carbon::parse($group->due_date)->format('d M Y') }}</span>
+                                            @else
+                                                <span class="text-muted"><i class="fas fa-infinity me-1"></i>Tidak ada tempo</span>
+                                            @endif
+                                        @endif
+                                    </td>
                                 </tr>
                             </table>
                         </div>
                         <div class="col-md-6">
-                            <h6 class="mb-3">Kriteria Mahasiswa</h6>
+                            <h6 class="mb-3">Kriteria Mahasantri</h6>
                             <table class="table table-borderless">
                                 <tr>
                                     <td width="150">Program Studi</td>
-                                    <td>: {{ $group->prodi ? $group->prodi->name : 'Semua' }}</td>
+                                    <td>: 
+                                        @if($group->prodi_id && $group->prodi)
+                                            <span class="badge bg-primary">{{ $group->prodi->name }}</span>
+                                        @else
+                                            <span class="text-muted">Semua Program Studi</span>
+                                        @endif
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td>Kelas</td>
-                                    <td>: {{ $group->kelas ? $group->kelas->name : 'Semua' }}</td>
+                                    <td>: 
+                                        @if($group->kelas_id && $group->kelas)
+                                            <span class="badge bg-info">{{ $group->kelas->name }}</span>
+                                        @else
+                                            <span class="text-muted">Semua Kelas</span>
+                                        @endif
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td>Gelombang</td>
-                                    <td>: {{ $group->gelombang ? $group->gelombang->name : 'Semua' }}</td>
+                                    <td>: 
+                                        @if($group->gelombang_id && $group->gelombang)
+                                            <span class="badge bg-success">{{ $group->gelombang->name }}</span>
+                                        @else
+                                            <span class="text-muted">Semua Gelombang</span>
+                                        @endif
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td>Jalur</td>
-                                    <td>: {{ $group->jalur ? $group->jalur->name : 'Semua' }}</td>
+                                    <td>: 
+                                        @if($group->jalur_id && $group->jalur)
+                                            <span class="badge bg-warning">{{ $group->jalur->name }}</span>
+                                        @else
+                                            <span class="text-muted">Semua Jalur</span>
+                                        @endif
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td>Semester</td>
-                                    <td>: {{ $group->semester ? 'Semester ' . $group->semester : 'Semua' }}</td>
+                                    <td>: 
+                                        @if($group->semester)
+                                            <span class="badge bg-secondary">Semester {{ $group->semester }}</span>
+                                        @else
+                                            <span class="text-muted">Semua Semester</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             </table>
                         </div>
@@ -114,7 +173,7 @@
                                 <tr>
                                     <th>No</th>
                                     <th>NIM</th>
-                                    <th>Nama Mahasiswa</th>
+                                    <th>Nama Mahasantri</th>
                                     <th>Program Studi</th>
                                     <th>Kelas</th>
                                     <th>Status</th>
@@ -130,7 +189,7 @@
                                         <td>{{ $tagihan->mahasiswa->prodi->name }}</td>
                                         <td>{{ $tagihan->mahasiswa->kelas->name }}</td>
                                         <td>
-                                            <span class="badge {{ $tagihan->status == 'Paid' ? 'bg-success' : ($tagihan->status == 'Pending' ? 'bg-warning' : 'bg-danger') }}">
+                                            <span class="badge {{ $tagihan->status == 'Paid' ? 'bg-success' : ($tagihan->status == 'Pending' ? 'bg-warning text-white' : 'bg-danger') }}">
                                                 {{ $tagihan->status }}
                                             </span>
                                         </td>

@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Pengaturan\LogAktivitas;
 use App\Models\Pengaturan\WebSetting;
 use App\Models\User;
-use App\Models\Mahasiswa;
+use App\Models\Mahasantri;
 use App\Models\Dosen;
 // Use Plugins
 
@@ -24,7 +24,7 @@ class LogAktivitasController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Log Aktivitas";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
 
         // Get all logs with relationships
         $data['logs'] = LogAktivitas::with('user')

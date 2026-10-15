@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\User\Mahasiswa;
+use App\Models\User\Mahasantri;
 use App\Models\User\Dosen;
 use App\Models\User\Staff;
 use App\Traits\HasLogAktivitas;
@@ -27,11 +27,11 @@ class User extends Authenticatable
             0 => 'Web Administrator',               // => Prefix web-admin  => For Website Development
             1 => 'Departement Akademik',            // => Prefix akademik   => For Pelayanan Akademik (BAAK Staff)
             2 => 'Departement Keuangan',            // => Prefix finance    => For Pelayanan Keuangan dan Pembayaran
-            3 => 'Departement Kemahasiswaan',       // => Prefix kemahasiswaan => For Kegiatan dan Organisasi Mahasiswa
+            3 => 'Departement Kemahasiswaan',       // => Prefix kemahasiswaan => For Kegiatan dan Organisasi Mahasantri
             4 => 'Departement Infrastruktur & IT',  // => Prefix it         => For Pengelolaan Infrastruktur dan Sistem
             5 => 'Departement Perpustakaan',        // => Prefix library    => For Pengelolaan Perpustakaan dan Peminjaman
             6 => 'Departement Umum',                // => Prefix umum       => For Administrasi Umum, Fasilitas, dan Kepegawaian (SDM)
-            7 => 'Departement Admisi'               // => Prefix admisi     => For Penerimaan Mahasiswa Baru (PMB) dan Pendaftaran
+            7 => 'Departement Admisi'               // => Prefix admisi     => For Penerimaan Mahasantri Baru (PMB) dan Pendaftaran
         ];
 
         return isset($types[$value]) ? $types[$value] : 'Unknown';
@@ -39,7 +39,10 @@ class User extends Authenticatable
 
     public function getPhotoAttribute($value)
     {
-        return $value == 'default.jpg' ? asset('storage/images/profile/default.jpg') : asset('storage/images/profile/' . $value);
+        if (!$value || $value === 'default.jpg') {
+            return asset('storage/images/profile/default.jpg');
+        }
+        return asset('storage/images/profile/' . $value);
     }
 
 

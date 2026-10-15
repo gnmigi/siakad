@@ -107,4 +107,31 @@ class LogAktivitasService
     {
         return LogAktivitas::byDateRange($startDate, $endDate)->latest()->get();
     }
+
+    /**
+     * Log login/logout event
+     */
+    public static function logAuthEvent($user, $userType, $action, $description)
+    {
+        try {
+            if (!$user) {
+                return null;
+            }
+
+            return LogAktivitas::create([
+                'user_id' => $user->id,
+                'user_type' => $userType,
+                'action' => $action,
+                'model_type' => get_class($user),
+                'model_id' => $user->id,
+                'changes' => null,
+                'ip_address' => Request::ip(),
+                'user_agent' => Request::userAgent(),
+                'description' => $description
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to log auth event: ' . $e->getMessage());
+            return null;
+        }
+    }
 } 

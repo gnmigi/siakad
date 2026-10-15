@@ -28,7 +28,7 @@ class JadwalKuliahController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Jadwal Kuliah";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         
         // Load all data with relationships
         $data['jadwal_kuliah'] = JadwalKuliah::with(['kelas', 'dosen', 'ruang', 'mataKuliah', 'jenisKelas', 'waktuKuliah'])->get();

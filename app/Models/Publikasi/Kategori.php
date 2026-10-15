@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\HasLogAktivitas;
 // USE MODELS
-use App\Models\Publikasi\Kategori;
 use App\Models\Publikasi\Berita;
 use App\Models\Publikasi\Pengumuman;
 use App\Models\Publikasi\Galeri;

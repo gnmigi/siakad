@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             // KONEKSI MODEL
-            // $table->enum('profile', ['Mahasiswa', 'Dosen', 'Staff'])->default('Mahasiswa');
+            // $table->enum('profile', ['Mahasantri', 'Dosen', 'Staff'])->default('Mahasantri');
             // $table->unsignedBigInteger('user_id')->nullable();
             $table->tinyInteger('type')->default('0');
 

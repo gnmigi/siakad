@@ -2,7 +2,7 @@
         <li class="sidebar-item {{ Route::is($prefix . 'workers.student-*', request()->path()) ? 'active' : '' }}">
             <a href="{{ route($prefix . 'workers.student-index') }}" class='sidebar-link'>
                 <i class="fa-solid fa-users"></i>
-                <span>Data Mahasiswa</span>
+                <span>Data Mahasantri</span>
             </a>
         </li>
         <li class="sidebar-item has-sub {{ Route::is($prefix.'master.*', request()->path()) ? 'active' : '' }}">

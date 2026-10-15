@@ -1,2 +1,59 @@
 User-agent: *
-Disallow:
+Allow: /
+
+# Sitemap
+Sitemap: https://maalamin.ac.id/sitemap.xml
+Sitemap: https://maalamin.ac.id/sitemap-berita.xml
+Sitemap: https://maalamin.ac.id/sitemap-pengumuman.xml
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /siakad/
+Disallow: /camaba/
+Disallow: /mahasiswa/
+Disallow: /dosen/
+Disallow: /api/
+Disallow: /debug/
+Disallow: /test/
+Disallow: /storage/logs/
+Disallow: /storage/framework/
+Disallow: /storage/app/
+Disallow: /vendor/
+Disallow: /bootstrap/cache/
+
+# Block theme parameter variations to prevent duplicate content
+Disallow: /*?theme=*
+Disallow: /*&theme=*
+
+# Allow important public pages
+Allow: /
+Allow: /profil*
+Allow: /visi-misi*
+Allow: /struktur*
+Allow: /fasilitas*
+Allow: /gallery*
+Allow: /pmb/daftar*
+Allow: /pengumuman*
+Allow: /berita*
+Allow: /program-studi*
+Allow: /kontak*
+Allow: /portal*
+
+# Block specific file types that shouldn't be indexed
+Disallow: *.pdf$
+Disallow: *.doc$
+Disallow: *.docx$
+Disallow: *.xls$
+Disallow: *.xlsx$
+Disallow: *.zip$
+Disallow: *.rar$
+Disallow: *.exe$
+
+# Crawl delay (be respectful to server)
+Crawl-delay: 1
+
+# Block common bot traps
+Disallow: /wp-admin/
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /cgi-bin/

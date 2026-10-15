@@ -29,7 +29,7 @@
                                 <option value="0">Semua Orang</option>
                                 <option value="1">Khusus Staff / Pegawai</option>
                                 <option value="2">Khusus Dosen</option>
-                                <option value="3">Khusus Mahasiswa</option>
+                                <option value="3">Khusus Mahasantri</option>
                             </select>
                             @error('send_to')
                                 <small class="text-danger">{{ $message }}</small>

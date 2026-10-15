@@ -4,128 +4,82 @@ namespace App\Http\Controllers\Master\PMB;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-// Use System
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
-// Use Models
-use App\Models\PMB\PeriodePendaftaran;
-use App\Models\Akademik\TahunAkademik;
 use App\Models\Pengaturan\WebSetting;
-// Use Plugins
+use App\Models\PMB\PeriodePendaftaran;
+use Illuminate\Support\Facades\Validator;
 
 class PeriodePendaftaranController extends Controller
 {
     public function renderPeriode()
     {
-        $user = Auth::user();
         $data['webs'] = WebSetting::first();
-        $data['spref'] = $user ? $user->prefix : '';
-        $data['menus'] = "Master";
-        $data['pages'] = "Periode Pendaftaran";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
-        $data['periodes'] = PeriodePendaftaran::all();
-        $data['takas'] = TahunAkademik::all();
+        $data['spref'] = '';
+        $data['menus'] = 'PMB';
+        $data['pages'] = 'Periode Pendaftaran';
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         
-        return view('master.pmb.periode-index', $data, compact('user'));
+        $data['periodes'] = PeriodePendaftaran::orderBy('created_at', 'desc')->get();
+        
+        return view('master.pmb.periode-index', $data);
     }
-
+    
     public function handlePeriode(Request $request)
     {
-        try {
-            DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'is_active' => 'boolean'
+        ]);
 
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'desc' => 'nullable|string',
-                'taka_id' => 'required|integer',
-                'start_date' => 'required|date',
-                'ended_date' => 'required|date|after:start_date',
-            ]);
-
-            // Generate unique code
-            $code = 'PRD-' . Str::random(8);
-            
-            // Create new Periode
-            PeriodePendaftaran::create([
-                'name' => $request->name,
-                'code' => $code,
-                'desc' => $request->desc,
-                'taka_id' => $request->taka_id,
-                'start_date' => $request->start_date,
-                'ended_date' => $request->ended_date,
-                'created_by' => Auth::id(),
-            ]);
-
-            DB::commit();
-            return redirect()->back()->with('success', 'Periode Pendaftaran berhasil ditambahkan');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
+        if ($validator->fails()) {
             return redirect()->back()
-                ->with('error', 'Gagal menambahkan Periode Pendaftaran: ' . $e->getMessage())
+                ->withErrors($validator)
                 ->withInput();
         }
-    }
 
+        PeriodePendaftaran::create([
+            'name' => $request->name,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'is_active' => $request->has('is_active')
+        ]);
+
+        return redirect()->back()->with('success', 'Periode pendaftaran berhasil ditambahkan');
+    }
+    
     public function updatePeriode(Request $request, $code)
     {
-        try {
-            DB::beginTransaction();
+        $periode = PeriodePendaftaran::where('code', $code)->firstOrFail();
+        
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'is_active' => 'boolean'
+        ]);
 
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'desc' => 'nullable|string',
-                'taka_id' => 'required|integer',
-                'start_date' => 'required|date',
-                'ended_date' => 'required|date|after:start_date',
-            ]);
-
-            $periode = PeriodePendaftaran::where('code', $code)->firstOrFail();
-
-            $periode->update([
-                'name' => $request->name,
-                'desc' => $request->desc,
-                'taka_id' => $request->taka_id,
-                'start_date' => $request->start_date,
-                'ended_date' => $request->ended_date,
-                'updated_by' => Auth::id(),
-            ]);
-
-            DB::commit();
-            return redirect()->back()->with('success', 'Periode Pendaftaran berhasil diperbarui');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
+        if ($validator->fails()) {
             return redirect()->back()
-                ->with('error', 'Gagal memperbarui Periode Pendaftaran: ' . $e->getMessage())
+                ->withErrors($validator)
                 ->withInput();
         }
-    }
 
+        $periode->update([
+            'name' => $request->name,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'is_active' => $request->has('is_active')
+        ]);
+
+        return redirect()->back()->with('success', 'Periode pendaftaran berhasil diperbarui');
+    }
+    
     public function deletePeriode($code)
     {
-        try {
-            DB::beginTransaction();
-
-            $periode = PeriodePendaftaran::where('code', $code)->firstOrFail();
-
-            // Optional: Add check if Periode has related Jalur Pendaftaran before deleting
-            if ($periode->jalurs()->count() > 0) {
-                return redirect()->back()->with('error', 'Tidak dapat menghapus Periode yang masih memiliki Jalur Pendaftaran');
-            }
-
-            $periode->update([
-                'deleted_by' => Auth::id()
-            ]);
-            $periode->delete();
-
-            DB::commit();
-            return redirect()->back()->with('success', 'Periode Pendaftaran berhasil dihapus');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', 'Gagal menghapus Periode Pendaftaran: ' . $e->getMessage());
-        }
+        $periode = PeriodePendaftaran::where('code', $code)->firstOrFail();
+        $periode->delete();
+        
+        return redirect()->back()->with('success', 'Periode pendaftaran berhasil dihapus');
     }
 }

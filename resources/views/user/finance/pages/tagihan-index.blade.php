@@ -118,7 +118,7 @@
                                                 <br>
                                                 {{ $item->prodi->name }}
                                             @elseif($item->users_id !== 0 && $item->mahasiswa)
-                                                Mahasiswa
+                                                Mahasantri
                                                 <br>
                                                 {{ $item->mahasiswa->mhs_name }}
                                             @else
@@ -184,9 +184,9 @@
                                     @enderror
                                 </div>
                                 <div class="form-group col-lg-4 col-12">
-                                    <label for="users_id">Tagihan Mahasiswa</label>
+                                    <label for="users_id">Tagihan Mahasantri</label>
                                     <select name="users_id" id="users_id" class="choices form-select">
-                                        <option value="0" selected>Pilih Mahasiswa</option>
+                                        <option value="0" selected>Pilih Mahasantri</option>
                                         @foreach ($mahasiswa as $mhs)
                                             <option value="{{ $mhs->id }}" {{ $item->users_id == $mhs->id ? 'selected' : '' }}>{{ $mhs->mhs_name }}</option>
                                         @endforeach

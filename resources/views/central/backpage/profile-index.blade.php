@@ -1,5 +1,9 @@
 @extends('core-themes.core-backpage')
 
+@section('head')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+@endsection
+
 @section('custom-css')
     <style>
         .profile-header {
@@ -43,40 +47,169 @@
             border-radius: 50%;
             object-fit: cover;
         }
- 
+
+        .alert {
+            margin-bottom: 1rem;
+        }
+
+        .alert-dismissible {
+            padding-right: 3rem;
+        }
+
+        .alert-dismissible .btn-close {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 1.25rem;
+        }
+
+        .is-invalid {
+            border-color: #dc3545;
+        }
+
+        .invalid-feedback {
+            display: block;
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Alert styles untuk konsistensi */
+        .alert {
+            border: none;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #842029;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #664d03;
+        }
+
+        /* Prevent form jumping */
+        .profile-form-container {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Smooth transitions */
+        .alert {
+            transition: all 0.3s ease;
+        }
     </style>
 @endsection
 
 @section('content')
-    <div class="card">
-        <div class="row g-0">
-            <div class="col-12 col-md-3 border-end">
-                <div class="card-body">
-                    <h4 class="subheader">Profile Settings</h4>
-                    <div class="list-group list-group-transparent" id="profileTabs" role="tablist">
-                        <a class="list-group-item list-group-item-action d-flex align-items-center active" id="personal-tab" data-bs-toggle="tab" href="#personal" role="tab">
-                            <i class="fas fa-user me-2"></i> Personal Info
-                        </a>
-                        <a class="list-group-item list-group-item-action d-flex align-items-center" id="contact-tab" data-bs-toggle="tab" href="#contact" role="tab">
-                            <i class="fas fa-address-book me-2"></i> Contact Info
-                        </a>
-                        <a class="list-group-item list-group-item-action d-flex align-items-center" id="address-tab" data-bs-toggle="tab" href="#address" role="tab">
-                            <i class="fas fa-map-marker-alt me-2"></i> Address
-                        </a>
-                        <a class="list-group-item list-group-item-action d-flex align-items-center" id="education-tab" data-bs-toggle="tab" href="#education" role="tab">
-                            <i class="fas fa-graduation-cap me-2"></i> Education
-                        </a>
-                        <a class="list-group-item list-group-item-action d-flex align-items-center" id="identity-tab" data-bs-toggle="tab" href="#identity" role="tab">
-                            <i class="fas fa-id-card me-2"></i> Identity
-                        </a>
+    <div class="profile-form-container">
+        <div class="card">
+            <div class="row g-0">
+                <div class="col-12 col-md-3 border-end">
+                    <div class="card-body">
+                        <h4 class="subheader">Profile Settings</h4>
+                        <div class="list-group list-group-transparent" id="profileTabs" role="tablist">
+                            <a class="list-group-item list-group-item-action d-flex align-items-center active" id="personal-tab" data-bs-toggle="tab" href="#personal" role="tab">
+                                <i class="fas fa-user me-2"></i> Personal Info
+                            </a>
+                            <a class="list-group-item list-group-item-action d-flex align-items-center" id="contact-tab" data-bs-toggle="tab" href="#contact" role="tab">
+                                <i class="fas fa-address-book me-2"></i> Contact Info
+                            </a>
+                            <a class="list-group-item list-group-item-action d-flex align-items-center" id="address-tab" data-bs-toggle="tab" href="#address" role="tab">
+                                <i class="fas fa-map-marker-alt me-2"></i> Address
+                            </a>
+                            <a class="list-group-item list-group-item-action d-flex align-items-center" id="education-tab" data-bs-toggle="tab" href="#education" role="tab">
+                                <i class="fas fa-graduation-cap me-2"></i> Education
+                            </a>
+                            <a class="list-group-item list-group-item-action d-flex align-items-center" id="identity-tab" data-bs-toggle="tab" href="#identity" role="tab">
+                                <i class="fas fa-id-card me-2"></i> Identity
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-12 col-md-9 d-flex flex-column">
-                <div class="card-body">
-                    <h2 class="mb-4">Profile Settings</h2>
+                <div class="col-12 col-md-9 d-flex flex-column">
+                    <div class="card-body">
+                        <h2 class="mb-4">Profile Settings</h2>
+                        <p class="text-muted mb-3">Lengkapi data profile Anda. Field yang wajib diisi ditandai dengan <span class="text-danger">*</span></p>
 
-                    <form action="{{ route($spref . 'profile-handle') }}" method="POST" enctype="multipart/form-data">
+                    <!-- Success/Error Messages -->
+                    @if(session('success'))
+                        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+                            <div class="d-flex">
+                                <div class="text-success">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M5 12l5 5l10 -10"></path>
+                                    </svg>
+                                </div>
+                                <div class="ms-2">
+                                    <h4 class="alert-title">Berhasil!</h4>
+                                    <div class="text-muted">{{ session('success') }}</div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+                            <div class="d-flex">
+                                <div class="text-danger">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-alert-circle" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"></path>
+                                        <path d="M12 8v4"></path>
+                                        <path d="M12 16h.01"></path>
+                                    </svg>
+                                </div>
+                                <div class="ms-2">
+                                    <h4 class="alert-title">Oops!</h4>
+                                    <div class="text-muted">{{ session('error') }}</div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    @if($errors->any())
+                        <div class="alert alert-warning alert-dismissible fade show border-0 shadow-sm" role="alert">
+                            <div class="d-flex">
+                                <div class="text-warning">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-info-circle" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"></path>
+                                        <path d="M12 9h.01"></path>
+                                        <path d="M11 12h1v4h1"></path>
+                                    </svg>
+                                </div>
+                                <div class="ms-2">
+                                    <h4 class="alert-title">Perhatian</h4>
+                                    <div class="text-muted">
+                                        <p class="mb-2">Mohon lengkapi data yang wajib diisi:</p>
+                                        <ul class="mb-0">
+                                            @foreach($errors->all() as $error)
+                                                @if(!str_contains($error, 'Mohon lengkapi data yang wajib diisi'))
+                                                    <li>{{ $error }}</li>
+                                                @endif
+                                            @endforeach
+                                        </ul>
+                                        <p class="mt-2 mb-0"><small>Field yang wajib diisi ditandai dengan tanda <span class="text-danger">*</span></small></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    <form action="{{ route($spref . 'profile-handle') }}" method="POST" enctype="multipart/form-data" id="profileForm">
                         @csrf
                         @method('PATCH')
 
@@ -86,25 +219,38 @@
                                 <h3 class="card-title">Profile Details</h3>
                                 <div class="row align-items-center mb-4">
                                     <div class="col-auto">
-                                        <img src="{{ $user == null ? '' : $user->photo }}" alt="Profile Photo" class="avatars" id="preview-image">
+                                        <img src="{{ $user && $user->photo ? $user->photo : asset('storage/images/profile/default.jpg') }}" alt="Profile Photo" class="avatars" id="preview-image">
                                     </div>
                                     <div class="col-auto">
-                                        <input type="file" class="form-control" name="photo" id="photo-input" accept="image/*">
+                                        <input type="file" class="form-control @error('photo') is-invalid @enderror" name="photo" id="photo-input" accept="image/*">
+                                        @error('photo')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                        <small class="text-muted mt-1 d-block">Format: JPG, PNG, JPEG | Max: 2MB</small>
                                     </div>
                                 </div>
 
                                 <div class="row g-3">
                                     <div class="col-md-4">
-                                        <label class="form-label required-field">Name</label>
-                                        <input type="text" class="form-control" name="name" value="{{ $user->name }}" required>
+                                        <label class="form-label required-field">Nama Lengkap</label>
+                                        <input type="text" class="form-control @error('name') is-invalid @enderror" name="name" value="{{ old('name', $user->name) }}" required>
+                                        @error('name')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label">Title Front</label>
-                                        <input type="text" class="form-control" name="title_front" value="{{ $user->title_front }}">
+                                        <label class="form-label">Gelar Depan</label>
+                                        <input type="text" class="form-control @error('title_front') is-invalid @enderror" name="title_front" value="{{ old('title_front', $user->title_front) }}" placeholder="Contoh: Dr., Prof.">
+                                        @error('title_front')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label">Title Behind</label>
-                                        <input type="text" class="form-control" name="title_behind" value="{{ $user->title_behind }}">
+                                        <label class="form-label">Gelar Belakang</label>
+                                        <input type="text" class="form-control @error('title_behind') is-invalid @enderror" name="title_behind" value="{{ old('title_behind', $user->title_behind) }}" placeholder="Contoh: S.T., M.T.">
+                                        @error('title_behind')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                 </div>
 
@@ -428,38 +574,60 @@
 @section('custom-js')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Image preview functionality
+            // Image preview functionality with validation
             const photoInput = document.getElementById('photo-input');
             const previewImage = document.getElementById('preview-image');
+            const profileForm = document.getElementById('profileForm');
 
-            photoInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        previewImage.src = e.target.result;
+            if (photoInput && previewImage) {
+                photoInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        // Validate file type
+                        const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                        if (!validTypes.includes(file.type)) {
+                            alert('Please select a valid image file (JPEG, PNG, JPG)');
+                            e.target.value = '';
+                            return;
+                        }
+
+                        // Validate file size (2MB)
+                        if (file.size > 2 * 1024 * 1024) {
+                            alert('File size must be less than 2MB');
+                            e.target.value = '';
+                            return;
+                        }
+
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            previewImage.src = e.target.result;
+                        }
+                        reader.readAsDataURL(file);
                     }
-                    reader.readAsDataURL(file);
-                }
-            });
+                });
+            }
+
+            // No separate photo upload - handled in main form
 
             // Handle domicile address fields visibility
             const domicileSame = document.getElementById('domicile_same');
             const domicileFields = document.getElementById('domicile_fields');
 
-            function toggleDomicileFields() {
-                if (domicileSame.value === 'Yes') {
-                    domicileFields.style.display = 'none';
-                } else {
-                    domicileFields.style.display = 'block';
+            if (domicileSame && domicileFields) {
+                function toggleDomicileFields() {
+                    if (domicileSame.value === 'Yes') {
+                        domicileFields.style.display = 'none';
+                    } else {
+                        domicileFields.style.display = 'block';
+                    }
                 }
+
+                // Initial check
+                toggleDomicileFields();
+
+                // Add event listener
+                domicileSame.addEventListener('change', toggleDomicileFields);
             }
-
-            // Initial check
-            toggleDomicileFields();
-
-            // Add event listener
-            domicileSame.addEventListener('change', toggleDomicileFields);
 
             // Handle tab navigation
             const tabLinks = document.querySelectorAll('[data-bs-toggle="tab"]');
@@ -468,15 +636,46 @@
                     e.preventDefault();
                     const target = document.querySelector(this.getAttribute('href'));
                     
-                    // Remove active class from all tabs and links
-                    document.querySelectorAll('.tab-pane').forEach(tab => tab.classList.remove('show', 'active'));
-                    document.querySelectorAll('.list-group-item').forEach(item => item.classList.remove('active'));
-                    
-                    // Add active class to current tab and link
-                    this.classList.add('active');
-                    target.classList.add('show', 'active');
+                    if (target) {
+                        // Remove active class from all tabs and links
+                        document.querySelectorAll('.tab-pane').forEach(tab => tab.classList.remove('show', 'active'));
+                        document.querySelectorAll('.list-group-item').forEach(item => item.classList.remove('active'));
+                        
+                        // Add active class to current tab and link
+                        this.classList.add('active');
+                        target.classList.add('show', 'active');
+                    }
                 });
             });
+
+            // Form submission with loading state
+            if (profileForm) {
+                profileForm.addEventListener('submit', function(e) {
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.textContent;
+                    
+                    submitBtn.textContent = 'Saving...';
+                    submitBtn.disabled = true;
+                    
+                    // Allow form to submit normally
+                    setTimeout(() => {
+                        submitBtn.textContent = originalText;
+                        submitBtn.disabled = false;
+                    }, 3000);
+                });
+            }
+
+            // Auto-hide alerts after 5 seconds
+            setTimeout(() => {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => {
+                    if (alert.classList.contains('alert-success') || alert.classList.contains('alert-danger')) {
+                        alert.style.transition = 'opacity 0.5s';
+                        alert.style.opacity = '0';
+                        setTimeout(() => alert.remove(), 500);
+                    }
+                });
+            }, 5000);
         });
     </script>
 @endsection

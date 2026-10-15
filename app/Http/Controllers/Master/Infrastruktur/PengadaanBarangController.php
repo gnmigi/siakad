@@ -23,7 +23,7 @@ class PengadaanBarangController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Pengadaan Barang";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         $data['pengadaanBarangs'] = PengadaanBarang::with('barang')->latest()->get();
         $data['barangs'] = Barang::all();
         

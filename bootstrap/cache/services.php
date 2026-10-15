@@ -43,7 +43,8 @@
     39 => 'App\\Providers\\AuthServiceProvider',
     40 => 'App\\Providers\\EventServiceProvider',
     41 => 'App\\Providers\\RouteServiceProvider',
-    42 => 'EragLaravelPwa\\EragLaravelPwaServiceProvider',
+    42 => 'App\\Providers\\ValidationServiceProvider',
+    43 => 'EragLaravelPwa\\EragLaravelPwaServiceProvider',
   ),
   'eager' => 
   array (
@@ -74,7 +75,8 @@
     24 => 'App\\Providers\\AuthServiceProvider',
     25 => 'App\\Providers\\EventServiceProvider',
     26 => 'App\\Providers\\RouteServiceProvider',
-    27 => 'EragLaravelPwa\\EragLaravelPwaServiceProvider',
+    27 => 'App\\Providers\\ValidationServiceProvider',
+    28 => 'EragLaravelPwa\\EragLaravelPwaServiceProvider',
   ),
   'deferred' => 
   array (

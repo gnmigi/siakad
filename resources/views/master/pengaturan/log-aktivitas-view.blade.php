@@ -105,7 +105,7 @@
         }
         
         .info-list .value {
-            color: #212529;
+            color: inherit;
         }
         
         .changes-list {
@@ -142,11 +142,11 @@
         }
 
         .change-item {
-             background: #f8f9fa;
+             background: rgba(255,255,255,0.05);
              padding: 15px;
              border-radius: 8px;
              margin-bottom: 10px;
-             border: 1px solid #e9ecef;
+             border: 1px solid rgba(255,255,255,0.1);
         }
 
          .change-item:last-child {
@@ -155,7 +155,7 @@
 
         .change-item .field-name {
             font-weight: 600;
-            color: #495057;
+            color: inherit;
             margin-bottom: 8px;
              display: block;
         }
@@ -287,14 +287,6 @@
                                         <li>
                                             <div class="label">ID Model</div>
                                             <div class="value">{{ $log->model_id }}</div>
-                                        </li>
-                                        <li>
-                                            <div class="label">URL</div>
-                                            <div class="value">{{ $log->url }}</div>
-                                        </li>
-                                        <li>
-                                            <div class="label">Method</div>
-                                            <div class="value">{{ $log->method }}</div>
                                         </li>
                                     </ul>
                                 </div>

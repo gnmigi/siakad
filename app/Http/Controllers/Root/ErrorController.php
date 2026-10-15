@@ -14,7 +14,11 @@ class ErrorController extends Controller
 {
     private function setPrefix()
     {
-        $rawType = Auth::user()->raw_type;
+        $user = Auth::user() ?: Auth::guard('dosen')->user() ?: Auth::guard('mahasiswa')->user();
+        if (!$user) {
+            return 'web-admin.';
+        }
+        $rawType = $user->raw_type;
         switch ($rawType) {
             case 1:
                 return 'finance.';

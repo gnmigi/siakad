@@ -9,7 +9,8 @@ use App\Traits\HasLogAktivitas;
 use App\Models\Akademik\ProgramStudi;
 use App\Models\Akademik\TahunAkademik;
 use App\Models\Akademik\JenisKelas;
-use App\Models\Mahasiswa;
+use App\Models\Akademik\JadwalKuliah;
+use App\Models\Mahasantri;
 
 class Kelas extends Model
 {
@@ -23,7 +24,17 @@ class Kelas extends Model
         return $this->belongsTo(TahunAkademik::class, 'taka_id');
     }
 
+    public function taka()
+    {
+        return $this->belongsTo(TahunAkademik::class, 'taka_id');
+    }
+
     public function programStudi()
+    {
+        return $this->belongsTo(ProgramStudi::class, 'prodi_id');
+    }
+
+    public function pstudi()
     {
         return $this->belongsTo(ProgramStudi::class, 'prodi_id');
     }
@@ -35,10 +46,15 @@ class Kelas extends Model
 
     public function ketua()
     {
-        return $this->belongsTo(Mahasiswa::class, 'ketua_id');
+        return $this->belongsTo(Mahasantri::class, 'ketua_id');
     }
     public function anggota()
     {
-        return $this->hasMany(Mahasiswa::class, 'kelas_id');
+        return $this->hasMany(Mahasantri::class, 'kelas_id');
+    }
+
+    public function jadwalKuliah()
+    {
+        return $this->belongsToMany(JadwalKuliah::class, 'jadwal_kelas', 'kelas_id', 'jadwal_id');
     }
 }

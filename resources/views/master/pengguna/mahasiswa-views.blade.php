@@ -297,6 +297,7 @@
                                             <label class="form-label">Jenis</label>
                                             <select class="form-select" name="edu1_type">
                                                 <option value="SMA/SMK" {{ $mahasiswa->edu1_type == 'SMA/SMK' ? 'selected' : '' }}>SMA/SMK</option>
+                                                <option value="Pesantren" {{ $mahasiswa->edu1_type == 'Pesantren' ? 'selected' : '' }}>Pesantren</option>
                                                 <option value="Diploma" {{ $mahasiswa->edu1_type == 'Diploma' ? 'selected' : '' }}>Diploma</option>
                                                 <option value="Sarjana" {{ $mahasiswa->edu1_type == 'Sarjana' ? 'selected' : '' }}>Sarjana</option>
                                                 <option value="Magister" {{ $mahasiswa->edu1_type == 'Magister' ? 'selected' : '' }}>Magister</option>

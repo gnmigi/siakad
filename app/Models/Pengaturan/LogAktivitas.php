@@ -30,10 +30,10 @@ class LogAktivitas extends Model
         'changes' => 'array'
     ];
 
-    // Relationship dengan User
+    // Relationship dengan User (Polymorphic)
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->morphTo('user', 'user_type', 'user_id');
     }
 
     // Relationship dengan user yang membuat
@@ -140,7 +140,7 @@ class LogAktivitas extends Model
     {
         $types = [
             'user' => 'Administrator',
-            'mahasiswa' => 'Mahasiswa',
+            'mahasiswa' => 'Mahasantri',
             'dosen' => 'Dosen',
             'guest' => 'Tamu'
         ];

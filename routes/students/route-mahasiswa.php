@@ -1,51 +1,134 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Private\Mahasantri\RootController;
+use App\Http\Controllers\Private\Mahasantri\KrsController;
+use App\Http\Controllers\Private\Mahasantri\KhsController;
 
-// HAK AKSES MAHASISWA
-Route::group(['prefix' => 'mahasiswa', 'middleware' => ['mhs-access:Mahasiswa Aktif'], 'as' => 'mahasiswa.'],function(){
-    // GLOBAL MENU AUTHENTIKASI
-    Route::get('/signout',[App\Http\Controllers\Mahasiswa\AuthController::class, 'AuthSignOutPost'])->name('auth-signout-post');
+/*
+|--------------------------------------------------------------------------
+| Mahasantri Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register mahasiswa routes for your application.
+| These routes are loaded by the RouteServiceProvider within a group which
+| contains the "mahasiswa" middleware group.
+|
+*/
 
-    Route::get('/profile',[App\Http\Controllers\Private\Mahasiswa\RootController::class, 'renderProfile'])->name('profile-render');
-    Route::patch('/profile',[App\Http\Controllers\Private\Mahasiswa\RootController::class, 'handleProfile'])->name('profile-handle');
+// Mahasantri Routes (Require Authentication)
+Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
+    Route::middleware(['mhs.access'])->group(function () {
+        // Dashboard
+        Route::get('/dashboard', [RootController::class, 'renderDashboard'])->name('dashboard-render');
+        
+        // Profile
+        Route::get('/profile', [RootController::class, 'renderProfile'])->name('profile-render');
+        Route::patch('/profile', [RootController::class, 'handleProfile'])->name('profile-handle');
+        
+        // KRS Routes - Protected by terminal check
+        Route::prefix('krs')->name('krs.')->middleware(['terminal:krs'])->group(function () {
+            Route::get('/', [KrsController::class, 'index'])->name('index');
+            Route::get('/create', [KrsController::class, 'create'])->name('create');
+            Route::post('/', [KrsController::class, 'store'])->name('store');
+            Route::get('/{id}', [KrsController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [KrsController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [KrsController::class, 'update'])->name('update');
+            Route::get('/{id}/print', [KrsController::class, 'print'])->name('print');
+            Route::get('/{id}/export-pdf', [KrsController::class, 'exportPdf'])->name('export-pdf');
+            Route::post('/{id}/submit', [KrsController::class, 'submit'])->name('submit');
+        });
 
-    // GLOBAL MENU
-    Route::get('/home',[App\Http\Controllers\Mahasiswa\HomeController::class, 'index'])->name('home-index');
-    Route::get('/profile/old',[App\Http\Controllers\Mahasiswa\HomeController::class, 'profile'])->name('home-profile');
-    Route::get('/tagihan',[App\Http\Controllers\Mahasiswa\HomeController::class, 'tagihanIndex'])->name('home-tagihan-index');
-    Route::get('/tagihan/{code}/invoice',[App\Http\Controllers\Mahasiswa\HomeController::class, 'tagihanInvoice'])->name('home-tagihan-invoice');
-    Route::get('/jadwal-kuliah',[App\Http\Controllers\Mahasiswa\HomeController::class, 'jadkulIndex'])->name('home-jadkul-index');
-    Route::get('/tagihan/view/{code}',[App\Http\Controllers\Mahasiswa\HomeController::class, 'tagihanView'])->name('home-tagihan-view');
-    Route::post('/tagihan/view/{code}/payment',[App\Http\Controllers\Mahasiswa\HomeController::class, 'tagihanPayment'])->name('home-tagihan-payment');
-    Route::get('/tagihan/view/{code}/payment/success',[App\Http\Controllers\Mahasiswa\HomeController::class, 'tagihanSuccess'])->name('home-tagihan-payment-success');
-    Route::get('/jadwal-kuliah/{code}/absen',[App\Http\Controllers\Mahasiswa\HomeController::class, 'jadkulAbsen'])->name('home-jadkul-absen');
-    Route::post('/jadwal-kuliah/store/absen',[App\Http\Controllers\Mahasiswa\HomeController::class, 'jadkulAbsenStore'])->name('home-jadkul-absen-store');
-    Route::post('/jadwal-kuliah/store/{code}/feedback',[App\Http\Controllers\Mahasiswa\HomeController::class, 'storeFBPerkuliahan'])->name('jadkul.feedback-store');
+        // KHS Routes - Protected by terminal check
+        Route::prefix('khs')->name('khs.')->middleware(['terminal:khs'])->group(function () {
+            Route::get('/', [KhsController::class, 'index'])->name('index');
+            Route::get('/print', [KhsController::class, 'print'])->name('print');
+            Route::get('/export-pdf', [KhsController::class, 'exportPdf'])->name('export-pdf');
+        });
 
-    // PRIVATE FUNCTION => PROFILE
-    Route::patch('/profile/update-image',[App\Http\Controllers\Mahasiswa\HomeController::class, 'saveImageProfile'])->name('home-profile-save-image');
-    Route::patch('/profile/update-data',[App\Http\Controllers\Mahasiswa\HomeController::class, 'saveDataProfile'])->name('home-profile-save-data');
-    Route::patch('/profile/update-kontak',[App\Http\Controllers\Mahasiswa\HomeController::class, 'saveDataKontak'])->name('home-profile-save-kontak');
-    Route::patch('/profile/update-password',[App\Http\Controllers\Mahasiswa\HomeController::class, 'saveDataPassword'])->name('home-profile-save-password');
+        // Transkrip Routes - Protected by terminal check
+        Route::prefix('transkrip')->name('transkrip.')->middleware(['terminal:transkrip'])->group(function () {
+            Route::get('/', [KhsController::class, 'transkrip'])->name('index');
+            Route::get('/export-pdf', [KhsController::class, 'transkripPdf'])->name('export-pdf');
+        });
+        
+        // Status Kelulusan Routes
+        Route::prefix('kelulusan')->name('kelulusan.')->group(function () {
+            Route::get('/', [KhsController::class, 'kelulusan'])->name('index');
+        });
+        
+        // Payment Routes
+        Route::prefix('payment')->name('payment.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'index'])->name('index');
+            
+            // Modern Core API Routes (harus di atas untuk menghindari konflik)
+            Route::get('/checkout/{tagihan}', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'checkoutModern'])->name('checkout-modern');
+            Route::post('/create-transaction', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'createTransaction'])->name('create-transaction');
+            Route::get('/status/{transaction}', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'statusModern'])->name('status-modern');
+            Route::get('/check-status/{transaction}', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'checkStatusModern'])->name('check-status-modern');
+            
+            // Payment Result Pages
+            Route::get('/success', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'success'])->name('success');
+            Route::get('/pending', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'pending'])->name('pending');
+            Route::get('/failed', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'failed'])->name('failed');
+            
+            Route::get('/create/{tagihan}', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'store'])->name('store');
+            Route::get('/{transaction}/snap-token', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'getSnapToken'])->name('snap-token');
+            Route::post('/{transaction}/upload-proof', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'uploadProof'])->name('upload-proof');
+            Route::post('/{transaction}/cancel', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'cancel'])->name('cancel');
+            Route::get('/{transaction}/view-receipt', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'viewReceipt'])->name('view-receipt');
+            Route::get('/{transaction}/receipt', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'downloadReceipt'])->name('receipt');
+            Route::get('/tagihan/{tagihan}/accumulated-receipt', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'viewAccumulatedReceipt'])->name('view-accumulated-receipt');
+            Route::get('/tagihan/{tagihan}/accumulated-receipt/download', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'downloadAccumulatedReceipt'])->name('download-accumulated-receipt');
+            Route::get('/{transaction}/status', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'checkStatus'])->name('check-status');
+            
+            // Payment Details (harus di bawah untuk menghindari konflik dengan routes spesifik)
+            Route::get('/{transaction}', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'show'])->name('show');
+        });
+        
+        // Payment History Routes
+        Route::get('/payment-history', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'history'])->name('payment.history');
+        
+        // Logout - Use main AuthController
+        Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'handleLogout'])->name('handle-logout');
+        Route::get('/logout', [\App\Http\Controllers\AuthController::class, 'handleLogout'])->name('handle-logout-get');
+    });
+});
 
-    // PRIVATE FUNCTION => SUPPORT TICKET
-    Route::get('/support',[App\Http\Controllers\Mahasiswa\Pages\SupportController::class, 'index'])->name('support.ticket-index');
-    Route::get('/support',[App\Http\Controllers\Mahasiswa\Pages\SupportController::class, 'index'])->name('support.ticket-index');
-    Route::get('/support/open',[App\Http\Controllers\Mahasiswa\Pages\SupportController::class, 'open'])->name('support.ticket-open');
-    Route::get('/support/view/{code}',[App\Http\Controllers\Mahasiswa\Pages\SupportController::class, 'view'])->name('support.ticket-view');
-    Route::get('/support/create/{dept}',[App\Http\Controllers\Mahasiswa\Pages\SupportController::class, 'create'])->name('support.ticket-create');
-    Route::post('/support/create/store',[App\Http\Controllers\Mahasiswa\Pages\SupportController::class, 'store'])->name('support.ticket-store');
-    Route::post('/support/create/store-reply/{code}',[App\Http\Controllers\Mahasiswa\Pages\SupportController::class, 'storeReply'])->name('support.ticket-store-reply');
-
-    // PRIVATE FUNCTION => TUGAS KULIAH
-    Route::get('/tugas-kuliah',[App\Http\Controllers\Mahasiswa\Pages\StudentTaskController::class, 'index'])->name('akademik.tugas-index');
-    Route::get('/tugas-kuliah/{code}/view',[App\Http\Controllers\Mahasiswa\Pages\StudentTaskController::class, 'view'])->name('akademik.tugas-view');
-    Route::post('/tugas-kuliah/{code}/store',[App\Http\Controllers\Mahasiswa\Pages\StudentTaskController::class, 'store'])->name('akademik.tugas-store');
-
-
-    // AJAX ASYNC
-    Route::get('/ajax/getTicketLastReply/{code}',[App\Http\Controllers\Mahasiswa\Pages\SupportController::class, 'AjaxLastReply'])->name('ajax.support.ticket-last-reply');
-
-    Route::get('/ajax/getTagihan',[App\Http\Controllers\Mahasiswa\HomeController::class, 'tagihanIndexAjax'])->name('ajax-tagihan-index');
+// Alumni Routes (Require Authentication)
+Route::prefix('alumni')->name('alumni.')->group(function () {
+    Route::middleware(['mhs.access'])->group(function () {
+        // Dashboard
+        Route::get('/dashboard', [RootController::class, 'renderAlumniDashboard'])->name('dashboard-render');
+        
+        // Profile
+        Route::get('/profile', [RootController::class, 'renderProfile'])->name('profile-render');
+        Route::patch('/profile', [RootController::class, 'handleProfile'])->name('profile-handle');
+        
+        // Alumni-specific routes (read-only academic records)
+        Route::prefix('transkrip')->name('transkrip.')->group(function () {
+            Route::get('/', [KhsController::class, 'transkrip'])->name('index');
+            Route::get('/export-pdf', [KhsController::class, 'transkripPdf'])->name('export-pdf');
+        });
+        
+        // Alumni KHS (historical records)
+        Route::prefix('khs')->name('khs.')->group(function () {
+            Route::get('/', [KhsController::class, 'index'])->name('index');
+            Route::get('/print', [KhsController::class, 'print'])->name('print');
+            Route::get('/export-pdf', [KhsController::class, 'exportPdf'])->name('export-pdf');
+        });
+        
+        // Status Kelulusan Routes (for alumni)
+        Route::prefix('kelulusan')->name('kelulusan.')->group(function () {
+            Route::get('/', [KhsController::class, 'kelulusan'])->name('index');
+        });
+        
+        // Payment History Routes (alumni can view payment history)
+        Route::get('/payment-history', [\App\Http\Controllers\Private\Mahasantri\PaymentController::class, 'history'])->name('payment.history');
+        
+        // Logout - Use main AuthController
+        Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'handleLogout'])->name('handle-logout');
+        Route::get('/logout', [\App\Http\Controllers\AuthController::class, 'handleLogout'])->name('handle-logout-get');
+    });
 });

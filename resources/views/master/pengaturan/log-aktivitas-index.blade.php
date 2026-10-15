@@ -74,17 +74,136 @@
 
         /* Responsive styling */
         @media screen and (max-width: 768px) {
-            .table td[data-label] {
-                text-align: right;
-                padding-left: 50%;
+            .table-responsive {
+                border: none !important;
+                background: transparent !important;
             }
-            .table td[data-label]:before {
-                content: attr(data-label);
-                position: absolute;
-                left: 0;
-                width: 45%;
-                padding-left: 1rem;
+
+            .table-responsive table,
+            .table-responsive tbody,
+            .table-responsive tr,
+            .table-responsive td {
+                display: block !important;
+                width: 100% !important;
+            }
+            
+            .table-responsive thead {
+                display: none !important;
+            }
+            
+            .table-responsive tr {
+                background: #ffffff !important;
+                border: 1px solid #eef2f6 !important;
+                border-radius: 12px !important;
+                padding: 1.25rem !important;
+                margin-bottom: 1.25rem !important;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+                position: relative;
+            }
+            
+            .table-responsive td {
+                border: none !important;
+                padding: 0.5rem 0 !important;
+                background: transparent !important;
+                position: relative;
+                display: block !important;
+                text-align: left !important;
+            }
+
+            /* "No" cell: small badge style */
+            .table-responsive td[data-label="No"] {
+                display: inline-block !important;
+                width: auto !important;
+                background: #f1f5f9 !important;
+                color: #475569 !important;
+                font-weight: 700 !important;
+                padding: 0.25rem 0.75rem !important;
+                border-radius: 6px !important;
+                font-size: 0.75rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+            .table-responsive td[data-label="No"]:before {
+                content: "#";
                 font-weight: bold;
+            }
+
+            /* "Waktu" cell: top right alignment */
+            .table-responsive td[data-label="Waktu"] {
+                display: inline-block !important;
+                width: auto !important;
+                float: right !important;
+                color: #64748b !important;
+                font-size: 0.75rem !important;
+                padding: 0.25rem 0 !important;
+            }
+            
+            /* Clear floats and style User cell */
+            .table-responsive td[data-label="User"] {
+                clear: both !important;
+                font-size: 1.05rem !important;
+                padding-top: 0.75rem !important;
+                border-top: 1px solid #f1f5f9 !important;
+            }
+            .table-responsive td[data-label="User"] .d-flex.flex-column {
+                align-items: flex-start !important;
+                text-align: left !important;
+            }
+            
+            /* Hide default labels for No, Waktu, User */
+            .table-responsive td[data-label="No"]:before,
+            .table-responsive td[data-label="Waktu"]:before,
+            .table-responsive td[data-label="User"]:before {
+                display: none !important;
+            }
+
+            /* Style "Aksi" badge */
+            .table-responsive td[data-label="Aksi"] {
+                display: block !important;
+                margin-top: 0.5rem !important;
+            }
+            .table-responsive td[data-label="Aksi"]:before {
+                content: "Aksi: ";
+                font-weight: 600;
+                color: #64748b;
+                font-size: 0.85rem;
+                margin-right: 0.5rem;
+            }
+
+            /* Style "Deskripsi" box */
+            .table-responsive td[data-label="Deskripsi"] {
+                color: #334155 !important;
+                font-size: 0.9rem !important;
+                margin-top: 0.5rem !important;
+                padding: 0.75rem !important;
+                background: #f8fafc !important;
+                border-radius: 8px !important;
+                border: 1px solid #eef2f6 !important;
+            }
+            .table-responsive td[data-label="Deskripsi"]:before {
+                content: "Deskripsi";
+                display: block !important;
+                font-weight: 600;
+                color: #64748b;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                margin-bottom: 0.25rem;
+            }
+
+            /* Style Action Buttons */
+            .table-responsive td[data-label="Tindakan"] {
+                border-top: 1px solid #f1f5f9 !important;
+                padding-top: 0.75rem !important;
+                margin-top: 0.75rem !important;
+                display: flex !important;
+                justify-content: flex-end !important;
+                align-items: center !important;
+            }
+            .table-responsive td[data-label="Tindakan"]:before {
+                content: "Tindakan";
+                font-weight: 600;
+                color: #64748b;
+                font-size: 0.85rem;
+                margin-right: auto;
             }
         }
     </style>
@@ -118,7 +237,7 @@
                         </div>
                         <div class="col-md-3 mb-2">
                             <div class="p-3 bg-light-warning rounded">
-                                <h6 class="mb-2">Mahasiswa</h6>
+                                <h6 class="mb-2">Mahasantri</h6>
                                 <h3 class="mb-0">{{ $mahasiswaLogs }}</h3>
                             </div>
                         </div>
@@ -140,7 +259,7 @@
                                         <select class="form-select" name="user_type" id="user_type">
                                             <option value="">Semua Tipe</option>
                                             <option value="user">Administrator</option>
-                                            <option value="mahasiswa">Mahasiswa</option>
+                                            <option value="mahasiswa">Mahasantri</option>
                                             <option value="dosen">Dosen</option>
                                         </select>
                                     </div>
@@ -200,8 +319,8 @@
                                             </span>
                                         </td>
                                         <td data-label="Deskripsi">{{ $log->description }}</td>
-                                        <td data-label="Waktu">{{ $log->created_at->format('d/m/Y H:i') }}</td>
-                                        <td>
+                                        <td data-label="Waktu" data-order="{{ $log->created_at->timestamp }}">{{ $log->created_at->format('d/m/Y H:i') }}</td>
+                                        <td data-label="Tindakan">
                                             <div class="btn-group" role="group">
                                                 <a href="{{ route($spref . 'pengaturan.log-aktivitas-view', $log->id) }}" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="Lihat Detail">
                                                     <i class="fas fa-eye"></i>
@@ -309,7 +428,7 @@
                         previous: "Sebelumnya"
                     }
                 },
-                responsive: true,
+                responsive: false,
                 pageLength: 10,
                 lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
                 order: [[4, 'desc']], // Sort by time column by default

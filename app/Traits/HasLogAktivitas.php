@@ -47,6 +47,10 @@ trait HasLogAktivitas
 
     protected static function logAktivitas($model, $action)
     {
+        if ($model instanceof LogAktivitas || get_class($model) === 'App\Models\Pengaturan\LogAktivitas') {
+            return;
+        }
+
         $authenticatedUser = null;
         $authenticatedUserId = null;
         $authenticatedUserType = 'guest';
@@ -71,25 +75,34 @@ trait HasLogAktivitas
 
         $changesToLog = [];
 
+        $ignoredFields = ['password', 'remember_token', 'code', 'mhs_code', 'verify_token', 'google_token', 'google_refresh_token'];
+
         if ($action === 'update') {
             $dirty = $model->getDirty();
             $original = $model->getOriginal();
             
             $attributesToLog = [];
             if ($model->getGuarded() === []) {
-                $attributesToLog = $dirty;
+                foreach ($dirty as $key => $value) {
+                    if (!in_array($key, $ignoredFields)) {
+                        $attributesToLog[$key] = $value;
+                    }
+                }
             } else {
                 $fillable = $model->getFillable();
                  foreach ($dirty as $key => $value) {
-                     if (in_array($key, $fillable)) {
+                     if (in_array($key, $fillable) && !in_array($key, $ignoredFields)) {
                            $attributesToLog[$key] = $value;
                      }
                  }
             }
             
+            // Get model ID safely
+            $modelId = method_exists($model, 'getKey') ? $model->getKey() : ($model->getAttribute('id') ?? 'N/A');
+            
             Log::info('HasLogAktivitas: Processing Update Changes', [
                 'model' => get_class($model),
-                'id' => $model->id ?? 'N/A',
+                'id' => $modelId,
                 'dirty_keys' => array_keys($dirty),
                 'attributes_to_log_count' => count($attributesToLog)
             ]);
@@ -98,15 +111,18 @@ trait HasLogAktivitas
                 $oldValue = $original[$key] ?? null;
 
                 // Log details of each attribute change being processed
-                Log::info('HasLogAktivitas: Processing Attribute Change', [
-                    'model' => get_class($model),
-                    'id' => $model->id ?? 'N/A',
-                    'field' => $key,
-                    'old_value_type' => gettype($oldValue),
-                    'old_value_size' => is_string($oldValue) ? strlen($oldValue) : null,
-                    'new_value_type' => gettype($newValue),
-                    'new_value_size' => is_string($newValue) ? strlen($newValue) : null,
-                ]);
+            // Get model ID safely
+            $modelId = method_exists($model, 'getKey') ? $model->getKey() : ($model->getAttribute('id') ?? 'N/A');
+            
+            Log::info('HasLogAktivitas: Processing Attribute Change', [
+                'model' => get_class($model),
+                'id' => $modelId,
+                'field' => $key,
+                'old_value_type' => gettype($oldValue),
+                'old_value_size' => is_string($oldValue) ? strlen($oldValue) : null,
+                'new_value_type' => gettype($newValue),
+                'new_value_size' => is_string($newValue) ? strlen($newValue) : null,
+            ]);
 
                 if ($oldValue != $newValue) {
                      $changesToLog[] = [
@@ -129,11 +145,11 @@ trait HasLogAktivitas
              }
              
               foreach ($attributesToLog as $key => $newValue) {
-                  if (!in_array($key, [$model->getCreatedAtColumn(), $model->getUpdatedAtColumn(), $model->getDeletedAtColumn(), 'created_by', 'updated_by', 'deleted_by'])) {
+                  if (!in_array($key, $ignoredFields) && !in_array($key, [$model->getCreatedAtColumn(), $model->getUpdatedAtColumn(), $model->getDeletedAtColumn(), 'created_by', 'updated_by', 'deleted_by'])) {
                       $changesToLog[] = [
-                         'field_name' => $key,
-                         'old_value' => null,
-                         'new_value' => is_array($newValue) ? json_encode($newValue) : $newValue,
+                          'field_name' => $key,
+                          'old_value' => null,
+                          'new_value' => is_array($newValue) ? json_encode($newValue) : $newValue,
                       ];
                   }
               }
@@ -150,23 +166,26 @@ trait HasLogAktivitas
              }
 
              foreach ($attributesToLog as $key => $oldValue) {
-                  if (!in_array($key, [$model->getCreatedAtColumn(), $model->getUpdatedAtColumn(), $model->getDeletedAtColumn(), 'created_by', 'updated_by', 'deleted_by'])) {
+                  if (!in_array($key, $ignoredFields) && !in_array($key, [$model->getCreatedAtColumn(), $model->getUpdatedAtColumn(), $model->getDeletedAtColumn(), 'created_by', 'updated_by', 'deleted_by'])) {
                        $changesToLog[] = [
-                          'field_name' => $key,
-                          'old_value' => is_array($oldValue) ? json_encode($oldValue) : $oldValue,
-                          'new_value' => null,
+                           'field_name' => $key,
+                           'old_value' => is_array($oldValue) ? json_encode($oldValue) : $oldValue,
+                           'new_value' => null,
                        ];
                    }
                }
         }
 
         if (!empty($changesToLog)) {
+            // Get model ID safely
+            $modelId = method_exists($model, 'getKey') ? $model->getKey() : ($model->getAttribute('id') ?? null);
+            
             ProcessActivityLog::dispatch(
                 $authenticatedUserId,
                 $authenticatedUserType,
                 $action,
                 get_class($model),
-                $model->id,
+                $modelId,
                 $changesToLog,
                 static::getClientIp(),
                 Request::userAgent(),

@@ -43,7 +43,11 @@ class AkademikSeeder extends Seeder
             ]
         ];
 
-        JenisKelas::insert($jenisKelas);
+        foreach ($jenisKelas as $jenis) {
+            if (!JenisKelas::where('code', $jenis['code'])->exists()) {
+                JenisKelas::create($jenis);
+            }
+        }
 
         // Seed Tahun Akademik
         $tahunAkademik = [
@@ -73,37 +77,37 @@ class AkademikSeeder extends Seeder
 
         TahunAkademik::insert($tahunAkademik);
 
-        // Seed Fakultas
-        $fakultas = [
-            [
-                'dekan_id' => 1,
-                'name' => 'Fakultas Teknologi Informasi',
-                'code' => 'FTI',
-                'desc' => 'Fakultas yang fokus pada pengembangan teknologi informasi dan komunikasi',
-                'slug' => 'fakultas-teknologi-informasi',
-                'accreditation' => 'A',
-                'objectives' => 'Menghasilkan lulusan yang kompeten dalam bidang teknologi informasi',
-                'careers' => 'Software Engineer, Data Scientist, IT Consultant',
-                'status' => 'Aktif',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now()
-            ],
-            [
-                'dekan_id' => 2,
-                'name' => 'Fakultas Ekonomi dan Bisnis',
-                'code' => 'FEB',
-                'desc' => 'Fakultas yang fokus pada pengembangan ilmu ekonomi dan bisnis',
-                'slug' => 'fakultas-ekonomi-dan-bisnis',
-                'accreditation' => 'A',
-                'objectives' => 'Menghasilkan lulusan yang kompeten dalam bidang ekonomi dan bisnis',
-                'careers' => 'Business Analyst, Accountant, Financial Advisor',
-                'status' => 'Aktif',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now()
-            ]
-        ];
+        // // Seed Fakultas
+        // $fakultas = [
+        //     [
+        //         'dekan_id' => 1,
+        //         'name' => 'Fakultas Teknologi Informasi',
+        //         'code' => 'FTI',
+        //         'desc' => 'Fakultas yang fokus pada pengembangan teknologi informasi dan komunikasi',
+        //         'slug' => 'fakultas-teknologi-informasi',
+        //         'accreditation' => 'A',
+        //         'objectives' => 'Menghasilkan lulusan yang kompeten dalam bidang teknologi informasi',
+        //         'careers' => 'Software Engineer, Data Scientist, IT Consultant',
+        //         'status' => 'Aktif',
+        //         'created_at' => Carbon::now(),
+        //         'updated_at' => Carbon::now()
+        //     ],
+        //     [
+        //         'dekan_id' => 2,
+        //         'name' => 'Fakultas Ekonomi dan Bisnis',
+        //         'code' => 'FEB',
+        //         'desc' => 'Fakultas yang fokus pada pengembangan ilmu ekonomi dan bisnis',
+        //         'slug' => 'fakultas-ekonomi-dan-bisnis',
+        //         'accreditation' => 'A',
+        //         'objectives' => 'Menghasilkan lulusan yang kompeten dalam bidang ekonomi dan bisnis',
+        //         'careers' => 'Business Analyst, Accountant, Financial Advisor',
+        //         'status' => 'Aktif',
+        //         'created_at' => Carbon::now(),
+        //         'updated_at' => Carbon::now()
+        //     ]
+        // ];
 
-        Fakultas::insert($fakultas);
+        // Fakultas::insert($fakultas);
 
         // Seed Program Studi
         $programStudi = [
@@ -141,6 +145,25 @@ class AkademikSeeder extends Seeder
                 'duration' => 8,
                 'objectives' => 'Menghasilkan lulusan yang kompeten dalam bidang manajemen',
                 'careers' => 'Business Manager, Marketing Manager, HR Manager',
+                'status' => 'Aktif',
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now()
+            ],
+            [
+                'fakultas_id' => 3,
+                'kaprodi_id' => null,
+                'name' => 'Bahasa Arab',
+                'code' => 'BA',
+                'desc' => 'Program studi Bahasa Arab',
+                'slug' => 'bahasa-arab',
+                'level' => 'Sarjana',
+                'title' => 'S1',
+                'title_start' => '',
+                'title_ended' => '',
+                'accreditation' => 'A',
+                'duration' => 8,
+                'objectives' => 'Menghasilkan lulusan yang kompeten dalam Bahasa Arab',
+                'careers' => 'Guru Bahasa Arab, Penerjemah, Peneliti Bahasa',
                 'status' => 'Aktif',
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now()
@@ -344,6 +367,114 @@ class AkademikSeeder extends Seeder
                 'code' => 'PM101',
                 'bsks' => '3',
                 'desc' => 'Konsep dasar manajemen',
+                'docs_rps' => null,
+                'docs_kontrak_kuliah' => null,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now()
+            ],
+            [
+                'kurikulum_id' => 3,
+                'prodi_id' => 3,
+                'requi_id' => null,
+                'dosen1_id' => 1,
+                'dosen2_id' => null,
+                'dosen3_id' => null,
+                'semester' => 1,
+                'photo' => 'default.png',
+                'name' => 'Tauhid',
+                'code' => 'BA101',
+                'bsks' => '2',
+                'desc' => 'Mata kuliah Tauhid',
+                'docs_rps' => null,
+                'docs_kontrak_kuliah' => null,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now()
+            ],
+            [
+                'kurikulum_id' => 3,
+                'prodi_id' => 3,
+                'requi_id' => null,
+                'dosen1_id' => 2,
+                'dosen2_id' => null,
+                'dosen3_id' => null,
+                'semester' => 1,
+                'photo' => 'default.png',
+                'name' => 'Nahwu',
+                'code' => 'BA102',
+                'bsks' => '2',
+                'desc' => 'Mata kuliah Nahwu',
+                'docs_rps' => null,
+                'docs_kontrak_kuliah' => null,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now()
+            ],
+            [
+                'kurikulum_id' => 3,
+                'prodi_id' => 3,
+                'requi_id' => null,
+                'dosen1_id' => 3,
+                'dosen2_id' => null,
+                'dosen3_id' => null,
+                'semester' => 1,
+                'photo' => 'default.png',
+                'name' => 'Sharaf',
+                'code' => 'BA103',
+                'bsks' => '2',
+                'desc' => 'Mata kuliah Sharaf',
+                'docs_rps' => null,
+                'docs_kontrak_kuliah' => null,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now()
+            ],
+            [
+                'kurikulum_id' => 3,
+                'prodi_id' => 3,
+                'requi_id' => null,
+                'dosen1_id' => 4,
+                'dosen2_id' => null,
+                'dosen3_id' => null,
+                'semester' => 1,
+                'photo' => 'default.png',
+                'name' => 'Fiqih',
+                'code' => 'BA104',
+                'bsks' => '2',
+                'desc' => 'Mata kuliah Fiqih',
+                'docs_rps' => null,
+                'docs_kontrak_kuliah' => null,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now()
+            ],
+            [
+                'kurikulum_id' => 3,
+                'prodi_id' => 3,
+                'requi_id' => null,
+                'dosen1_id' => 5,
+                'dosen2_id' => null,
+                'dosen3_id' => null,
+                'semester' => 1,
+                'photo' => 'default.png',
+                'name' => 'Ushul Fiqih',
+                'code' => 'BA105',
+                'bsks' => '2',
+                'desc' => 'Mata kuliah Ushul Fiqih',
+                'docs_rps' => null,
+                'docs_kontrak_kuliah' => null,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now()
+            ],
+            [
+                'kurikulum_id' => 3,
+                'prodi_id' => 3,
+                'requi_id' => null,
+                'dosen1_id' => 6,
+                'dosen2_id' => null,
+                'dosen3_id' => null,
+                'semester' => 1,
+                'photo' => 'default.png',
+                'name' => 'Qowaidul Fiqih',
+                'code' => 'BA106',
+                'bsks' => '2',
+                'desc' => 'Mata kuliah Qowaidul Fiqih',
                 'docs_rps' => null,
                 'docs_kontrak_kuliah' => null,
                 'created_at' => Carbon::now(),

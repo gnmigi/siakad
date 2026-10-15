@@ -1,13 +1,10 @@
 <?php
 
 namespace App\Models\PMB;
-// USE SYSTEM
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\HasLogAktivitas;
-// USE MODELS
-use App\Models\PMB\JalurPendaftaran;
-use App\Models\Pendaftaran\Pendaftar;
 
 class GelombangPendaftaran extends Model
 {
@@ -16,17 +13,36 @@ class GelombangPendaftaran extends Model
     protected $table = 'gelombang_pendaftarans';
     protected $guarded = [];
 
-    public function jalur()
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'is_active' => 'boolean',
+    ];
+
+    // Relasi dengan Pendaftar
+    public function pendaftars()
     {
-        return $this->belongsTo(JalurPendaftaran::class, 'jalur_id');
+        return $this->hasMany(\App\Models\PMB\Pendaftar::class, 'gelombang_id');
     }
 
-    public function jadwals()
+    // Relasi dengan TagihanKuliahGroup
+    public function tagihanKuliahGroups()
     {
-        return $this->hasMany(JadwalPMB::class, 'gelombang_id');
+        return $this->hasMany(\App\Models\Keuangan\TagihanKuliahGroup::class, 'gelombang_id');
     }
-    public function pendaftar()
+
+    // Scope untuk gelombang aktif
+    public function scopeActive($query)
     {
-        return $this->hasMany(Pendaftar::class, 'gelombang_id');
+        return $query->where('is_active', true);
+    }
+
+    // Scope untuk gelombang yang sedang berjalan
+    public function scopeRunning($query)
+    {
+        $now = now();
+        return $query->where('start_date', '<=', $now)
+                    ->where('end_date', '>=', $now)
+                    ->where('is_active', true);
     }
 }

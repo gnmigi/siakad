@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\HasLogAktivitas;
 // USE MODELS
-use App\Models\Mahasiswa;
+use App\Models\Mahasantri;
 use App\Models\PMB\JalurPendaftaran;
 use App\Models\PMB\GelombangPendaftaran;
 use App\Models\Akademik\JenisKelas;
@@ -21,7 +21,7 @@ class Pendaftar extends Model
 
     public function mahasiswa()
     {
-        return $this->belongsTo(Mahasiswa::class, 'mahasiswa_id');
+        return $this->belongsTo(Mahasantri::class, 'mahasiswa_id');
     }
 
     public function jalur()

@@ -64,6 +64,13 @@ class SetupController extends Controller
 
             DB::commit();
 
+            file_put_contents(storage_path('installed'), 'Setup completed on ' . now());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Setup berhasil diselesaikan. Silakan login untuk mengakses sistem.'
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Setup berhasil diselesaikan. Silakan login untuk mengakses sistem.'

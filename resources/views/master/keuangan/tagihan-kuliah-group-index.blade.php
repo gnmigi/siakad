@@ -102,12 +102,21 @@
             margin-top: 1rem;
         }
 
+        /* SweetAlert custom styling */
+        .swal-wide {
+            width: 600px !important;
+        }
+
         /* Responsive styling */
         @media screen and (max-width: 768px) {
             .table td[data-label] .d-flex.align-items-center,
             .table td[data-label] .d-flex.flex-column.align-items-center {
                 align-items: flex-end !important;
                 text-align: right;
+            }
+            
+            .swal-wide {
+                width: 95% !important;
             }
         }
 
@@ -188,7 +197,7 @@
                     <div class="collapse" id="collapseForm">
                         <div class="card card-body border">
                             <h5 class="card-title mb-3">Tambah Group Tagihan Baru</h5>
-                            <form action="{{ route($spref . 'keuangan.tagihan-kuliah-group-handle') }}" method="post">
+                            <form action="{{ route('keuangan.tagihan-kuliah-group-handle') }}" method="post">
                                 @csrf
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
@@ -211,15 +220,22 @@
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="amount" class="form-label">Jumlah Tagihan</label>
+                                        <label for="amount" class="form-label">Jumlah Tagihan per Mahasiswa</label>
                                         <input type="number" class="form-control" name="amount" id="amount" min="0" required>
+                                        <small class="text-muted">Masukkan jumlah tagihan per mahasiswa (bukan total)</small>
                                         @error('amount')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="due_date" class="form-label">Tenggat Waktu</label>
-                                        <input type="date" class="form-control" name="due_date" id="due_date" required>
+                                        <input type="date" class="form-control" name="due_date" id="due_date">
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="checkbox" id="no_due_date" name="no_due_date" value="1">
+                                            <label class="form-check-label" for="no_due_date">
+                                                Tidak ada tempo
+                                            </label>
+                                        </div>
                                         @error('due_date')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
@@ -345,8 +361,39 @@
                                         </td>
                                         <td data-label="Jumlah">
                                             <div class="d-flex flex-column">
-                                                <span class="fw-bold">Rp {{ number_format($group->amount, 0, ',', '.') }}</span>
-                                                <small class="text-muted">Due: {{ \Carbon\Carbon::parse($group->due_date)->format('d M Y') }}</small>
+                                                @php
+                                                    $syncStatus = $group->getSynchronizationStatus();
+                                                    $actualCount = $group->getActualStudentCount();
+                                                    $perStudentAmount = $group->getAmountPerStudent();
+                                                    $totalAmount = $group->getTotalAmount();
+                                                @endphp
+                                                
+                                                <span class="fw-bold">
+                                                    @if($actualCount > 0)
+                                                        Rp {{ number_format($perStudentAmount, 0, ',', '.') }} / mahasiswa
+                                                    @else
+                                                        Rp {{ number_format($group->amount, 0, ',', '.') }}
+                                                    @endif
+                                                </span>
+                                                
+                                                @if($actualCount > 0)
+                                                    <small class="text-muted">
+                                                        Total: Rp {{ number_format($totalAmount, 0, ',', '.') }} ({{ $actualCount }} mhs)
+                                                    </small>
+                                                    <small class="{{ $syncStatus['class'] }}">
+                                                        <i class="fas {{ $syncStatus['status'] === 'synchronized' ? 'fa-check-circle' : 'fa-exclamation-triangle' }}"></i>
+                                                        {{ $syncStatus['message'] }}
+                                                    </small>
+                                                @endif
+                                                
+                                                <small class="text-muted">
+                                                    Due: 
+                                                    @if($group->due_date)
+                                                        {{ \Carbon\Carbon::parse($group->due_date)->format('d M Y') }}
+                                                    @else
+                                                        <span class="text-muted">Tidak ada tempo</span>
+                                                    @endif
+                                                </small>
                                             </div>
                                         </td>
                                         <td data-label="Status">
@@ -357,29 +404,34 @@
                                         <td>
                                             <div class="btn-group" role="group">
                                                 @if($group->status == 'Draft')
-                                                    <form action="{{ route($spref . 'keuangan.tagihan-kuliah-group-publish', $group->code) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-sm btn-success" data-bs-toggle="tooltip" title="Publish Group">
-                                                            <i class="fas fa-check"></i>
-                                                        </button>
-                                                    </form>
+                                                    <button type="button" class="btn btn-sm btn-success" onclick="confirmPublish('{{ $group->code }}', '{{ $group->name }}')" data-bs-toggle="tooltip" title="Publish & Generate Tagihan Individual">
+                                                        <i class="fas fa-rocket me-1"></i>Publish
+                                                    </button>
                                                 @endif
                                                 @if($group->status == 'Published')
-                                                    <a href="{{ route($spref . 'keuangan.tagihan-kuliah-group-detail', $group->code) }}" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="Lihat Detail Tagihan">
-                                                        <i class="fas fa-eye"></i>
+                                                    <a href="{{ route('keuangan.tagihan-kuliah-group-detail', $group->code) }}" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="Lihat Detail Tagihan Individual">
+                                                        <i class="fas fa-eye me-1"></i>Detail
+                                                    </a>
+                                                    <a href="{{ route('keuangan.tagihan-kuliah-group-bulk-operations', $group->code) }}" class="btn btn-sm btn-warning" data-bs-toggle="tooltip" title="Bulk Operations - Edit/Hapus Massal">
+                                                        <i class="fas fa-edit me-1"></i>Bulk Ops
+                                                    </a>
+                                                    <a href="{{ route('keuangan.tagihan-individual-index') }}" class="btn btn-sm btn-secondary" data-bs-toggle="tooltip" title="Kelola Tagihan Individual">
+                                                        <i class="fas fa-list me-1"></i>Individual
                                                     </a>
                                                 @endif
                                                 <a href="#" data-bs-toggle="modal" data-bs-target="#editData{{ $group->code }}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Edit Group">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <form action="{{ route($spref . 'keuangan.tagihan-kuliah-group-delete', $group->code) }}" method="POST" class="d-inline" id="delete-form-{{ $group->code }}">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="button" class="btn btn-sm btn-danger" data-confirm-delete="true" data-bs-toggle="tooltip" title="Hapus Group" onclick="confirmDelete('{{ $group->code }}')">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
+                                                <button type="button" class="btn btn-sm btn-danger" data-confirm-delete="true" data-bs-toggle="tooltip" title="Hapus Group" onclick="confirmDelete('{{ $group->code }}')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
                                             </div>
+                                            
+                                            <!-- Hidden form for delete -->
+                                            <form action="{{ route('keuangan.tagihan-kuliah-group-delete', $group->code) }}" method="POST" class="d-none" id="delete-form-{{ $group->code }}">
+                                                @csrf
+                                                @method('DELETE')
+                                            </form>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -423,7 +475,12 @@
                                             <span class="badge {{ $recent->status == 'Published' ? 'bg-light-success text-success' : ($recent->status == 'Draft' ? 'bg-light-warning text-warning' : 'bg-light-info text-info') }}">
                                                 {{ $recent->status }}
                                             </span>
-                                            Rp {{ number_format($recent->amount, 0, ',', '.') }}
+                                            @if($recent->getActualStudentCount() > 0)
+                                                Rp {{ number_format($recent->getAmountPerStudent(), 0, ',', '.') }}/mhs
+                                                <small class="text-muted">({{ $recent->getActualStudentCount() }} mhs)</small>
+                                            @else
+                                                Rp {{ number_format($recent->amount, 0, ',', '.') }}
+                                            @endif
                                         </p>
                                         <small class="text-muted">
                                             @if($recent->prodi)
@@ -448,7 +505,7 @@
         <div class="modal fade" id="editData{{ $group->code }}" tabindex="-1" role="dialog" aria-labelledby="editModalLabel{{ $group->code }}" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                 <div class="modal-content">
-                    <form action="{{ route($spref . 'keuangan.tagihan-kuliah-group-update', $group->code) }}" method="POST">
+                    <form action="{{ route('keuangan.tagihan-kuliah-group-update', $group->code) }}" method="POST">
                         @method('patch')
                         @csrf
                         <div class="modal-header">
@@ -477,15 +534,22 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="edit_amount{{ $group->code }}" class="form-label">Jumlah Tagihan</label>
-                                    <input type="number" class="form-control" name="amount" id="edit_amount{{ $group->code }}" value="{{ $group->amount }}" min="0" required>
+                                    <label for="edit_amount{{ $group->code }}" class="form-label">Jumlah Tagihan per Mahasiswa</label>
+                                    <input type="number" class="form-control" name="amount" id="edit_amount{{ $group->code }}" value="{{ $group->getAmountPerStudent() }}" min="0" required>
+                                    <small class="text-muted">Jumlah tagihan per mahasiswa (bukan total)</small>
                                     @error('amount')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="edit_due_date{{ $group->code }}" class="form-label">Tenggat Waktu</label>
-                                    <input type="date" class="form-control" name="due_date" id="edit_due_date{{ $group->code }}" value="{{ \Carbon\Carbon::parse($group->due_date)->format('d-m-Y') }}" required>
+                                    <input type="date" class="form-control" name="due_date" id="edit_due_date{{ $group->code }}" value="{{ $group->due_date ? \Carbon\Carbon::parse($group->due_date)->format('Y-m-d') : '' }}">
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" id="edit_no_due_date{{ $group->code }}" name="no_due_date" value="1" {{ !$group->due_date ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="edit_no_due_date{{ $group->code }}">
+                                            Tidak ada tempo
+                                        </label>
+                                    </div>
                                     @error('due_date')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -614,6 +678,37 @@
                     { orderable: false, targets: -1 }
                 ]
             });
+
+            // Handle "Tidak ada tempo" checkbox for create form
+            $('#no_due_date').change(function() {
+                if ($(this).is(':checked')) {
+                    $('#due_date').val('').prop('disabled', true);
+                } else {
+                    $('#due_date').prop('disabled', false);
+                }
+            });
+
+            // Handle "Tidak ada tempo" checkbox for edit forms
+            $('[id^="edit_no_due_date"]').change(function() {
+                const groupCode = $(this).attr('id').replace('edit_no_due_date', '');
+                const dueDateInput = $('#edit_due_date' + groupCode);
+                
+                if ($(this).is(':checked')) {
+                    dueDateInput.val('').prop('disabled', true);
+                } else {
+                    dueDateInput.prop('disabled', false);
+                }
+            });
+
+            // Initialize edit form checkboxes state
+            $('[id^="edit_no_due_date"]').each(function() {
+                const groupCode = $(this).attr('id').replace('edit_no_due_date', '');
+                const dueDateInput = $('#edit_due_date' + groupCode);
+                
+                if ($(this).is(':checked')) {
+                    dueDateInput.prop('disabled', true);
+                }
+            });
         });
 
         // Konfirmasi delete dengan SweetAlert
@@ -630,6 +725,61 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     document.getElementById('delete-form-' + code).submit();
+                }
+            });
+        }
+
+        // Konfirmasi publish dengan SweetAlert
+        function confirmPublish(code, name) {
+            Swal.fire({
+                title: 'Publish Group Tagihan?',
+                html: `
+                    <div class="text-start">
+                        <p><strong>Group:</strong> ${name}</p>
+                        <p><strong>Kode:</strong> ${code}</p>
+                        <hr>
+                        <p class="text-warning"><i class="fas fa-exclamation-triangle me-2"></i><strong>Perhatian:</strong></p>
+                        <ul class="text-start">
+                            <li>Sistem akan otomatis membuat tagihan individual untuk setiap mahasiswa yang memenuhi kriteria</li>
+                            <li>Tagihan yang sudah dipublish tidak dapat diubah kembali ke status Draft</li>
+                            <li>Mahasiswa akan dapat melihat dan membayar tagihan setelah dipublish</li>
+                        </ul>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-rocket me-2"></i>Ya, Publish!',
+                cancelButtonText: '<i class="fas fa-times me-2"></i>Batal',
+                customClass: {
+                    popup: 'swal-wide'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading
+                    Swal.fire({
+                        title: 'Memproses...',
+                        html: 'Sedang membuat tagihan individual untuk mahasiswa...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Submit form
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `{{ route('keuangan.tagihan-kuliah-group-publish', ':code') }}`.replace(':code', code);
+                    
+                    const csrfToken = document.createElement('input');
+                    csrfToken.type = 'hidden';
+                    csrfToken.name = '_token';
+                    csrfToken.value = '{{ csrf_token() }}';
+                    
+                    form.appendChild(csrfToken);
+                    document.body.appendChild(form);
+                    form.submit();
                 }
             });
         }

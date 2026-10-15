@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class MhsAccess
@@ -13,19 +14,23 @@ class MhsAccess
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, $MahasiswaMhsStat): Response
+    public function handle(Request $request, Closure $next): Response
     {
-        // Cek apakah pengguna sudah login
-        if (auth()->guard('mahasiswa')->check()) {
-            // Jika sudah login, cek tipe pengguna
-            if(auth()->guard('mahasiswa')->user()->mhs_stat == $MahasiswaMhsStat){
-                return $next($request);
-            }
-
-            // return redirect()->route('error.access');
+        // Check if user is authenticated with mahasiswa guard
+        if (!Auth::guard('mahasiswa')->check()) {
+            return redirect()->route('auth.render-signin')->with('error', 'Silakan login terlebih dahulu');
         }
 
-        // Jika belum login, arahkan ke rute 'auth-login'
-        return redirect()->route('mahasiswa.auth-signin-page');
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+
+        // Check if mahasiswa is valid (calon mahasiswa, aktif, or alumni)
+        // Allow: type 0 (calon mahasiswa), type 1 (mahasiswa aktif), type 3 (alumni)
+        // Block only: type 2 (mahasiswa non-aktif)
+        if ($mahasiswa->raw_type == 2) {
+            Auth::guard('mahasiswa')->logout();
+            return redirect()->route('auth.render-signin')->with('error', 'Akun mahasiswa tidak aktif');
+        }
+
+        return $next($request);
     }
 }

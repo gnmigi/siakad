@@ -12,7 +12,9 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        '/mahasiswa/ajax/getTagihan'
-        //
+        '/mahasiswa/ajax/getTagihan',
+        'api/webhook/midtrans',
+        'api/webhook/*',
+        'api/payment/webhook/*'
     ];
 }

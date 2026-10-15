@@ -1,43 +1,37 @@
 <?php
 
 namespace App\Models\PMB;
-// USE SYSTEM
-use Illuminate\Database\Eloquent\SoftDeletes;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\HasLogAktivitas;
-// USE MODELS
-use App\Models\PMB\PeriodePendaftaran;
-use App\Models\Pendaftaran\Pendaftar;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class JalurPendaftaran extends Model
 {
-    use SoftDeletes, HasLogAktivitas;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'jalur_pendaftarans';
-    protected $guarded = [];
 
-    public function periode()
-    {
-        return $this->belongsTo(PeriodePendaftaran::class, 'periode_id');
-    }
+    protected $fillable = [
+        'periode_id',
+        'name',
+        'code',
+        'desc',
+        'status',
+        'created_by',
+        'updated_by',
+        'deleted_by'
+    ];
+
+    protected $dates = ['deleted_at'];
 
     public function pendaftar()
     {
         return $this->hasMany(Pendaftar::class, 'jalur_id');
     }
 
-    public function biayas()
+    public function periode()
     {
-        return $this->hasMany(BiayaPendaftaran::class, 'jalur_id');
-    }
-
-    public function syarats()
-    {
-        return $this->hasMany(SyaratPendaftaran::class, 'jalur_id');
-    }
-
-    public function gelombangs()
-    {
-        return $this->hasMany(GelombangPendaftaran::class, 'jalur_id');
+        return $this->belongsTo(PeriodePendaftaran::class, 'periode_id');
     }
 }

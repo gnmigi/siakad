@@ -39,4 +39,17 @@ return [
         'is3ds'         => env('MIDTRANS_IS_3DS'),
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'model'   => env('GEMINI_MODEL', 'gemini-2.5-flash'),
+    ],
+
+    'whatsapp' => [
+        'url'         => env('WHATSAPP_GATEWAY_URL'),
+        'api_key'     => env('WHATSAPP_GATEWAY_API_KEY'),
+        'instance'    => env('WHATSAPP_GATEWAY_INSTANCE', 'siakad_instance'),
+        'webhook_key' => env('WHATSAPP_WEBHOOK_KEY'),
+    ],
+
+
 ];

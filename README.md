@@ -93,7 +93,7 @@ Yang membuat Neco Siakad istimewa adalah sifatnya yang open source dan kolaborat
    - Manajemen Syarat Pendaftaran
    - Manajemen Gelombang Pendaftaran
    - Manajemen Jadwal PMB
-   - Manajemen Calon Mahasiswa
+   - Manajemen Calon Mahasantri
 
 6. **Menu Publikasi** ✅
    - Manajemen Kategori
@@ -107,7 +107,7 @@ Yang membuat Neco Siakad istimewa adalah sifatnya yang open source dan kolaborat
 
 8. **Menu Pengguna** ✅
    - Manajemen Staff
-   - Manajemen Mahasiswa
+   - Manajemen Mahasantri
    - Manajemen Dosen
 
 9. **Menu Infrastruktur** ✅
@@ -143,8 +143,8 @@ Yang membuat Neco Siakad istimewa adalah sifatnya yang open source dan kolaborat
    - Penilaian tugas
    - Feedback mahasiswa
 
-### Mahasiswa 🔄
-1. **Dashboard Mahasiswa**
+### Mahasantri 🔄
+1. **Dashboard Mahasantri**
    - Jadwal kuliah
    - Status kehadiran
    - Notifikasi tugas
@@ -188,7 +188,7 @@ Untuk model dengan banyak kolom atau data besar, proses logging dilakukan secara
 
 Setiap entri log aktivitas mencatat informasi berikut:
 
-*   **User:** Pengguna yang melakukan tindakan (Administrator, Mahasiswa, atau Dosen), beserta tipe dan ID-nya.
+*   **User:** Pengguna yang melakukan tindakan (Administrator, Mahasantri, atau Dosen), beserta tipe dan ID-nya.
 *   **Aksi:** Jenis tindakan yang dilakukan (Membuat, Mengubah, Menghapus).
 *   **Model:** Model Eloquent yang terpengaruh oleh aksi (misalnya, `App\Models\Akademik\Fakultas`, `App\Models\User`, dll.), beserta ID objek model tersebut.
 *   **Perubahan Data:** Untuk aksi 'Mengubah', sistem mencatat detail setiap field yang berubah, menampilkan nilai lama dan nilai baru. Untuk aksi 'Membuat', mencatat nilai baru field yang diisi. Untuk aksi 'Menghapus', mencatat nilai lama objek sebelum dihapus.
@@ -223,7 +223,7 @@ Pastikan model Anda memiliki properti `$fillable` yang mendefinisikan kolom mana
 
 Log aktivitas dapat dilihat melalui antarmuka pengguna di bagian Pengaturan > Log Aktivitas (URL: `/pengaturan/log-aktivitas`). Halaman ini menyediakan daftar semua log, filter berdasarkan tipe user, aksi, dan rentang tanggal, serta tampilan detail untuk setiap entri log yang menampilkan semua informasi yang dicatat, termasuk perubahan data secara rinci.
 
-Anda juga bisa mengakses log terkait model tertentu melalui relasi `activityLogs()` atau mendapatkan aktivitas terbaru yang dilakukan oleh user melalui method `recentActivity()` jika model tersebut menggunakan trait tersebut dan merupakan model User/Mahasiswa/Dosen.
+Anda juga bisa mengakses log terkait model tertentu melalui relasi `activityLogs()` atau mendapatkan aktivitas terbaru yang dilakukan oleh user melalui method `recentActivity()` jika model tersebut menggunakan trait tersebut dan merupakan model User/Mahasantri/Dosen.
 
 ```php
 // Mengambil semua log terkait model tertentu
@@ -269,7 +269,7 @@ Link: https://siakad-pt.idev-fun.org/dosen/auth-signin
 User: dosen.a@example.com (a-d)
 Pass: Dosen123
 
-Demo Mahasiswa:
+Demo Mahasantri:
 Link: https://siakad-pt.idev-fun.org/mahasiswa/auth-signin
 User: mahasiswa.a@example.com (a-d)
 Pass: Mahasiswa123

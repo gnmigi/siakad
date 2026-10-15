@@ -22,7 +22,7 @@ class KategoriBarangController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Kategori Barang";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         $data['kategoriBarangs'] = KategoriBarang::latest()->get();
         
         return view('master.infrastruktur.kategori-barang-index', $data, compact('user'));

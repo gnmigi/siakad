@@ -1,0 +1,250 @@
+/* Dashboard Performance Optimized CSS */
+
+/* Critical Path CSS - Load First */
+.page-wrapper {
+    min-height: 100vh;
+    transition: all 0.2s ease;
+}
+
+/* Optimized Card Animations */
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    will-change: transform;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Performance Optimized Counters */
+.achievement-counter {
+    font-weight: 700;
+    font-size: 2.5rem;
+    line-height: 1.2;
+    color: var(--tblr-primary);
+    transition: color 0.3s ease;
+}
+
+/* Optimized Loading States */
+.loading-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Fast Transitions */
+.btn {
+    transition: all 0.15s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Optimized Table Performance */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+/* Performance Optimized Sidebar */
+.navbar-nav .nav-link {
+    transition: all 0.2s ease;
+    border-radius: 0.375rem;
+}
+
+.navbar-nav .nav-link:hover {
+    background-color: rgba(var(--tblr-primary-rgb), 0.1);
+    transform: translateX(4px);
+}
+
+/* Optimized Form Elements */
+.form-control {
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-control:focus {
+    border-color: var(--tblr-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--tblr-primary-rgb), 0.25);
+}
+
+/* Fast Badge Animations */
+.badge {
+    transition: all 0.15s ease;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
+
+/* Optimized Status Indicators */
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    transition: all 0.2s ease;
+}
+
+.status-dot-animated {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Performance Optimized Dropdowns */
+.dropdown-menu {
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    transform-origin: top;
+}
+
+.dropdown-menu.show {
+    opacity: 1;
+    transform: scaleY(1);
+}
+
+/* Optimized Avatar */
+.avatar {
+    transition: transform 0.2s ease;
+}
+
+.avatar:hover {
+    transform: scale(1.1);
+}
+
+/* Fast Chart Containers */
+.chart-container {
+    position: relative;
+    height: 300px;
+    transition: opacity 0.3s ease;
+}
+
+/* Optimized Progress Bars */
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+/* Performance Optimized Alerts */
+.alert {
+    transition: all 0.3s ease;
+}
+
+.alert.fade-in {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.alert.fade-out {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .achievement-counter {
+        font-size: 2rem;
+    }
+    
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    .navbar-nav .nav-link:hover {
+        transform: none;
+        background-color: rgba(var(--tblr-primary-rgb), 0.1);
+    }
+    
+    /* Reduce animations on mobile for better performance */
+    * {
+        animation-duration: 0.1s !important;
+        transition-duration: 0.1s !important;
+    }
+}
+
+/* Prefers Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Critical Performance Improvements */
+.page-body {
+    contain: layout style;
+}
+
+.container-xl {
+    contain: layout;
+}
+
+/* GPU Acceleration for Smooth Animations */
+.card,
+.btn,
+.navbar-nav .nav-link,
+.achievement-counter {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Optimized Focus States */
+.btn:focus,
+.form-control:focus,
+.nav-link:focus {
+    outline: 2px solid var(--tblr-primary);
+    outline-offset: 2px;
+}
+
+/* Fast Loading Indicators */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.1em;
+}
+
+/* Performance Optimized Tables */
+.table-hover tbody tr:hover {
+    background-color: rgba(var(--tblr-primary-rgb), 0.05);
+}
+
+/* Optimized Icon Performance */
+.icon {
+    display: inline-block;
+    vertical-align: middle;
+    stroke-width: 2;
+}
+
+/* Fast Theme Transitions */
+[data-bs-theme="dark"] {
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Optimized Notification Styles */
+.toast {
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast.hide {
+    opacity: 0;
+    transform: translateX(100%);
+}

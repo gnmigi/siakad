@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 // Models
 use App\Models\User;
 use App\Models\Dosen;
-use App\Models\Mahasiswa;
+use App\Models\Mahasantri;
 // Auth
 use Illuminate\Support\Facades\Auth;
 // Plugins

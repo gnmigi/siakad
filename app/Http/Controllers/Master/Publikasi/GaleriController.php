@@ -25,7 +25,7 @@ class GaleriController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Galeri";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         $data['galeri'] = Galeri::latest()->get();
         $data['kategori'] = Kategori::all();
         
@@ -38,7 +38,7 @@ class GaleriController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Galeri";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         $data['galeri'] = Galeri::where('code', $code)->firstOrFail();
         
         return view('master.publikasi.galeri-view', $data, compact('user'));

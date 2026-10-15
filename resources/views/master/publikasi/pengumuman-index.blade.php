@@ -58,6 +58,15 @@
             padding-top: 0.75rem;
             padding-bottom: 0.75rem;
             text-align: left;
+            color: #374151 !important;
+        }
+
+        [data-bs-theme="dark"] .table td {
+            color: #f9fafb !important;
+        }
+
+        [data-bs-theme="dark"] .table tbody tr td {
+            color: #ffffff !important;
         }
 
         .table th.text-center, .table td.text-center {
@@ -90,6 +99,22 @@
         .badge {
             padding: 0.5em 0.75em;
             font-weight: 500;
+            color: #ffffff !important;
+        }
+
+        .badge.bg-success {
+            background-color: #28a745 !important;
+            color: #ffffff !important;
+        }
+
+        .badge.bg-warning {
+            background-color: #ffc107 !important;
+            color: #212529 !important;
+        }
+
+        .badge.bg-secondary {
+            background-color: #6c757d !important;
+            color: #ffffff !important;
         }
 
         /* Collapsible form */
@@ -242,6 +267,46 @@
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
+                                    
+                                    <!-- Attachments Section -->
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">Lampiran</label>
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <div id="attachments-container">
+                                                    <div class="attachment-item mb-3">
+                                                        <div class="row">
+                                                            <div class="col-md-3">
+                                                                <select class="form-select attachment-type" name="attachment_types[]">
+                                                                    <option value="file">Upload File</option>
+                                                                    <option value="link">Link External</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <input type="text" class="form-control" name="attachment_titles[]" placeholder="Judul lampiran (opsional)">
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <input type="file" class="form-control attachment-file" name="attachment_files[]" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar">
+                                                                <input type="url" class="form-control attachment-link d-none" name="attachment_links[]" placeholder="https://...">
+                                                            </div>
+                                                            <div class="col-md-1">
+                                                                <button type="button" class="btn btn-danger btn-sm remove-attachment">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-secondary btn-sm" id="add-attachment">
+                                                    <i class="fas fa-plus me-1"></i>Tambah Lampiran
+                                                </button>
+                                                <small class="text-muted d-block mt-2">
+                                                    File yang didukung: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, ZIP, RAR (Max: 10MB)
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="col-12 d-flex justify-content-end">
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-save me-2"></i>Simpan
@@ -277,6 +342,9 @@
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
+                                                <a href="{{ route($spref . 'publikasi.pengumuman-view', $item->slug) }}" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="Selengkapnya">
+                                                    <i class="fas fa-info-circle"></i>
+                                                </a>
                                                 <a href="#" data-bs-toggle="modal" data-bs-target="#editData{{ $item->code }}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Edit Pengumuman">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
@@ -397,6 +465,65 @@
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
+                                
+                                <!-- Existing Attachments -->
+                                @if($item->attachments && count($item->attachments) > 0)
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">Lampiran Saat Ini</label>
+                                        <div class="card">
+                                            <div class="card-body">
+                                                @foreach($item->attachments as $index => $attachment)
+                                                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                                                        <div>
+                                                            <strong>{{ $attachment['title'] }}</strong>
+                                                            <small class="text-muted d-block">{{ $attachment['type'] === 'file' ? 'File: ' . $attachment['original_name'] : 'Link: ' . $attachment['url'] }}</small>
+                                                        </div>
+                                                        <div>
+                                                            <input type="checkbox" name="keep_attachments[]" value="{{ $index }}" checked>
+                                                            <label class="form-check-label ms-1">Pertahankan</label>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                                
+                                <!-- New Attachments -->
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">Tambah Lampiran Baru</label>
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div id="edit-attachments-container-{{ $item->code }}">
+                                                <div class="attachment-item mb-3">
+                                                    <div class="row">
+                                                        <div class="col-md-3">
+                                                            <select class="form-select attachment-type" name="attachment_types[]">
+                                                                <option value="file">Upload File</option>
+                                                                <option value="link">Link External</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <input type="text" class="form-control" name="attachment_titles[]" placeholder="Judul lampiran (opsional)">
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <input type="file" class="form-control attachment-file" name="attachment_files[]" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar">
+                                                            <input type="url" class="form-control attachment-link d-none" name="attachment_links[]" placeholder="https://...">
+                                                        </div>
+                                                        <div class="col-md-1">
+                                                            <button type="button" class="btn btn-danger btn-sm remove-attachment">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn btn-secondary btn-sm add-edit-attachment" data-target="edit-attachments-container-{{ $item->code }}">
+                                                <i class="fas fa-plus me-1"></i>Tambah Lampiran
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -472,5 +599,93 @@
                 }
             });
         }
+
+        // Attachment functionality
+        $(document).ready(function() {
+            // Add new attachment
+            $('#add-attachment').click(function() {
+                const attachmentHtml = `
+                    <div class="attachment-item mb-3">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <select class="form-select attachment-type" name="attachment_types[]">
+                                    <option value="file">Upload File</option>
+                                    <option value="link">Link External</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" name="attachment_titles[]" placeholder="Judul lampiran (opsional)">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="file" class="form-control attachment-file" name="attachment_files[]" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar">
+                                <input type="url" class="form-control attachment-link d-none" name="attachment_links[]" placeholder="https://...">
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-danger btn-sm remove-attachment">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                $('#attachments-container').append(attachmentHtml);
+            });
+
+            // Remove attachment
+            $(document).on('click', '.remove-attachment', function() {
+                if ($('.attachment-item').length > 1) {
+                    $(this).closest('.attachment-item').remove();
+                } else {
+                    Swal.fire('Info', 'Minimal harus ada satu lampiran', 'info');
+                }
+            });
+
+            // Toggle between file and link input
+            $(document).on('change', '.attachment-type', function() {
+                const container = $(this).closest('.attachment-item');
+                const fileInput = container.find('.attachment-file');
+                const linkInput = container.find('.attachment-link');
+                
+                if ($(this).val() === 'file') {
+                    fileInput.removeClass('d-none');
+                    linkInput.addClass('d-none');
+                    linkInput.val('');
+                } else {
+                    fileInput.addClass('d-none');
+                    linkInput.removeClass('d-none');
+                    fileInput.val('');
+                }
+            });
+
+            // Add attachment for edit modal
+            $(document).on('click', '.add-edit-attachment', function() {
+                const targetContainer = $(this).data('target');
+                const attachmentHtml = `
+                    <div class="attachment-item mb-3">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <select class="form-select attachment-type" name="attachment_types[]">
+                                    <option value="file">Upload File</option>
+                                    <option value="link">Link External</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" name="attachment_titles[]" placeholder="Judul lampiran (opsional)">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="file" class="form-control attachment-file" name="attachment_files[]" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar">
+                                <input type="url" class="form-control attachment-link d-none" name="attachment_links[]" placeholder="https://...">
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-danger btn-sm remove-attachment">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                $('#' + targetContainer).append(attachmentHtml);
+            });
+        });
     </script>
 @endsection

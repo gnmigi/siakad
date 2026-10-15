@@ -48,7 +48,7 @@
                     <a href="{{ route('web-admin.workers.lecture-index') }}" class="submenu-link">Data Dosen</a>
                 </li>
                 <li class="submenu-item {{ Route::is('web-admin.workers.student-*', request()->path()) ? 'active' : '' }}">
-                    <a href="{{ route('web-admin.workers.student-index') }}" class="submenu-link">Data Mahasiswa</a>
+                    <a href="{{ route('web-admin.workers.student-index') }}" class="submenu-link">Data Mahasantri</a>
                 </li>
             </ul>
         </li>

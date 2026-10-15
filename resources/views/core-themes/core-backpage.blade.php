@@ -5,11 +5,42 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     @PwaHead
 
-    <title>{{ (isset($menus) ? $menus . ' - ' : '') . $pages . ' - ' . $academy }}</title>
+    @php
+        // Set up SEO data for backpage
+        $seoTitle = isset($seo_title) ? $seo_title : (isset($menus) ? $menus : (isset($pages) ? $pages : 'Dashboard'));
+        $seoDescription = isset($seo_description) ? $seo_description : 'Sistem Informasi Akademik Ma\'had Aly Ma\'al Amin';
+        $seoKeywords = isset($seo_keywords) ? $seo_keywords : 'SIAKAD, Ma\'had Aly Ma\'al Amin, sistem akademik';
+        
+        // Configure SEO service if available
+        if (isset($seo)) {
+            $seo->setTitle($seoTitle);
+            $seo->setDescription($seoDescription);
+            $seo->setKeywords($seoKeywords);
+        }
+    @endphp
+    
+    <title>{{ isset($seo) ? $seo->getTitle() : ((isset($menus) ? $menus . ' - ' : '') . (isset($pages) ? $pages : 'Dashboard') . ' - ' . config('app.name')) }}</title>
+    
+    @if(isset($seo))
+        {!! $seo->generateMetaTags() !!}
+    @else
+        <meta name="description" content="Sistem Informasi Akademik Ma'had Aly Ma'al Amin">
+        <meta name="keywords" content="SIAKAD, Ma'had Aly Ma'al Amin, sistem akademik">
+        <meta name="author" content="{{ config('app.name') }}">
+        
+        <meta property="og:title" content="{{ (isset($menus) ? $menus . ' - ' : '') . (isset($pages) ? $pages : 'Dashboard') . ' - ' . config('app.name') }}">
+        <meta property="og:description" content="Sistem Informasi Akademik Ma'had Aly Ma'al Amin">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:site_name" content="{{ config('app.name') }}">
+        
+        <link rel="canonical" href="{{ url()->current() }}">
+    @endif
     <!-- BEGIN PAGE LEVEL STYLES -->
-    <link href="./libs/jsvectormap/dist/jsvectormap.css?1747482948" rel="stylesheet" />
+    <link href="{{ asset('dashboard') }}/libs/jsvectormap/dist/jsvectormap.css?1747482948" rel="stylesheet" />
     <!-- END PAGE LEVEL STYLES -->
     <!-- BEGIN GLOBAL MANDATORY STYLES -->
     <link href="{{ asset('dashboard') }}/dist/css/tabler.css?1747482948" rel="stylesheet" />
@@ -24,7 +55,7 @@
     <link href="{{ asset('dashboard') }}/dist/css/tabler-themes.css?1747482948" rel="stylesheet" />
     <!-- END PLUGINS STYLES -->
     <!-- BEGIN DEMO STYLES -->
-    <link href="./preview/css/demo.css?1747482948" rel="stylesheet" />
+    <link href="{{ asset('dashboard') }}/preview/css/demo.css?1747482948" rel="stylesheet" />
     <!-- END DEMO STYLES -->
     @yield('custom-css')
     <style>
@@ -58,7 +89,7 @@
                 <!-- BEGIN NAVBAR LOGO -->
                 <div class="navbar-brand navbar-brand-autodark">
                     <a href="{{ route('root.home-index') }}" aria-label="Tabler">
-                        <img src="{{ $webs->school_logo_hori }}" style="height: 64px; width:200px;" alt="Neco Siakad Logo">
+                        <img src="{{ isset($webs) && $webs->school_logo_hori ? $webs->school_logo_hori : asset('logo.png') }}" style="max-height: 64px; max-width: 200px; height: auto; width: auto; object-fit: contain;" alt="Maal Amin">
                     </a>
                 </div>
                 <!-- END NAVBAR LOGO -->
@@ -113,74 +144,81 @@
                                         <div class="btn-close ms-auto" data-bs-dismiss="dropdown"></div>
                                     </div>
                                     <div class="list-group list-group-flush list-group-hoverable">
-                                        <div class="list-group-item">
-                                            <div class="row align-items-center">
-                                                <div class="col-auto"><span class="status-dot status-dot-animated bg-red d-block"></span></div>
-                                                <div class="col text-truncate">
-                                                    <a href="#" class="text-body d-block">Example 1</a>
-                                                    <div class="d-block text-secondary text-truncate mt-n1">Change deprecated html tags to text decoration classes (#29604)</div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <a href="#" class="list-group-item-actions">
-                                                        <!-- Download SVG icon from http://tabler.io/icons/icon/star -->
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-muted icon-2">
-                                                            <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
-                                                        </svg>
-                                                    </a>
+                                        @php
+                                            // Get latest pengumuman and berita for notifications
+                                            $notifications = collect();
+                                            
+                                            try {
+                                                $pengumuman = \App\Models\Publikasi\Pengumuman::where('status', 'Publish')
+                                                    
+                                                    ->latest()
+                                                    ->take(3)
+                                                    ->get();
+                                                
+                                                foreach($pengumuman as $item) {
+                                                    $notifications->push([
+                                                        'type' => 'pengumuman',
+                                                        'title' => 'Pengumuman: ' . $item->name,
+                                                        'description' => strip_tags($item->content ?? $item->description ?? ''),
+                                                        'url' => '#',
+                                                        'date' => $item->created_at,
+                                                        'status' => 'red'
+                                                    ]);
+                                                }
+                                                
+                                                $berita = \App\Models\Publikasi\Berita::where('status', 'Publish')
+                                                    
+                                                    ->latest()
+                                                    ->take(2)
+                                                    ->get();
+                                                
+                                                foreach($berita as $item) {
+                                                    $notifications->push([
+                                                        'type' => 'berita',
+                                                        'title' => 'Berita: ' . $item->name,
+                                                        'description' => strip_tags($item->content ?? $item->description ?? ''),
+                                                        'url' => '#',
+                                                        'date' => $item->created_at,
+                                                        'status' => 'green'
+                                                    ]);
+                                                }
+                                                
+                                                $notifications = $notifications->sortByDesc('date')->take(4);
+                                            } catch (\Exception $e) {
+                                                // Fallback to empty collection if tables don't exist
+                                                $notifications = collect();
+                                            }
+                                        @endphp
+                                        
+                                        @forelse($notifications as $notification)
+                                            <div class="list-group-item">
+                                                <div class="row align-items-center">
+                                                    <div class="col-auto">
+                                                        <span class="status-dot @if($notification['status'] == 'red') status-dot-animated bg-red @elseif($notification['status'] == 'green') status-dot-animated bg-green @else @endif d-block"></span>
+                                                    </div>
+                                                    <div class="col text-truncate">
+                                                        <a href="{{ $notification['url'] }}" class="text-body d-block">{{ $notification['title'] }}</a>
+                                                        <div class="d-block text-secondary text-truncate mt-n1">{{ Str::limit($notification['description'], 60) }}</div>
+                                                    </div>
+                                                    <div class="col-auto">
+                                                        <a href="{{ $notification['url'] }}" class="list-group-item-actions">
+                                                            <!-- Download SVG icon from http://tabler.io/icons/icon/star -->
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-muted icon-2">
+                                                                <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
+                                                            </svg>
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="list-group-item">
-                                            <div class="row align-items-center">
-                                                <div class="col-auto"><span class="status-dot d-block"></span></div>
-                                                <div class="col text-truncate">
-                                                    <a href="#" class="text-body d-block">Example 2</a>
-                                                    <div class="d-block text-secondary text-truncate mt-n1">justify-content:between ⇒ justify-content:space-between (#29734)</div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <a href="#" class="list-group-item-actions show">
-                                                        <!-- Download SVG icon from http://tabler.io/icons/icon/star -->
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-yellow icon-2">
-                                                            <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
-                                                        </svg>
-                                                    </a>
+                                        @empty
+                                            <div class="list-group-item">
+                                                <div class="row align-items-center">
+                                                    <div class="col text-center">
+                                                        <div class="text-muted">Tidak ada notifikasi terbaru</div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="list-group-item">
-                                            <div class="row align-items-center">
-                                                <div class="col-auto"><span class="status-dot d-block"></span></div>
-                                                <div class="col text-truncate">
-                                                    <a href="#" class="text-body d-block">Example 3</a>
-                                                    <div class="d-block text-secondary text-truncate mt-n1">Update change-version.js (#29736)</div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <a href="#" class="list-group-item-actions">
-                                                        <!-- Download SVG icon from http://tabler.io/icons/icon/star -->
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-muted icon-2">
-                                                            <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="list-group-item">
-                                            <div class="row align-items-center">
-                                                <div class="col-auto"><span class="status-dot status-dot-animated bg-green d-block"></span></div>
-                                                <div class="col text-truncate">
-                                                    <a href="#" class="text-body d-block">Example 4</a>
-                                                    <div class="d-block text-secondary text-truncate mt-n1">Regenerate package-lock.json (#29730)</div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <a href="#" class="list-group-item-actions">
-                                                        <!-- Download SVG icon from http://tabler.io/icons/icon/star -->
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-muted icon-2">
-                                                            <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        @endforelse
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
@@ -198,52 +236,69 @@
                     </div>
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown" aria-label="Open user menu">
-                            <span class="avatar avatar-sm" style="background-image: url({{ $user == null ? '' : $user->photo }})"> </span>
+                            <span class="avatar avatar-sm" style="background-image: url({{ Auth::user() && Auth::user()->photo ? Auth::user()->photo : asset('storage/images/profile/default.jpg') }})"> </span>
                             <div class="d-none d-xl-block ps-2">
-                                <div>{{ $user == null ? '' : $user->name }}</div>
-                                <div class="mt-1 small text-secondary">{{ $user == null ? '' : $user->name }}</div>
+                                <div>{{ Auth::user() ? Auth::user()->name : 'Guest' }}</div>
+                                <div class="mt-1 small text-secondary">{{ Auth::user() ? Auth::user()->type : 'Web Administrator' }}</div>
                             </div>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                             <a href="#" class="dropdown-item">Status</a>
-                            <a href="{{ route($spref . 'profile-render') }}" class="dropdown-item">Profile</a>
+                            @php $profileRoute = (isset($spref) ? $spref : 'root.') . 'profile-render'; @endphp
+                            <a href="{{ \Illuminate\Support\Facades\Route::has($profileRoute) ? route($profileRoute) : '#' }}" class="dropdown-item">Profile</a>
                             <a href="#" class="dropdown-item">Feedback</a>
                             <div class="dropdown-divider"></div>
                             <a href="./settings.html" class="dropdown-item">Settings</a>
-                            <a href="{{ route($spref . 'handle-logout') }}" class="dropdown-item">Logout</a>
+                            @php $logoutRoute = (isset($spref) ? $spref : 'root.') . 'handle-logout'; @endphp
+                            <a href="{{ \Illuminate\Support\Facades\Route::has($logoutRoute) ? route($logoutRoute) : '#' }}" class="dropdown-item">Logout</a>
                         </div>
                     </div>
                 </div>
                 <div class="collapse navbar-collapse" id="sidebar-menu">
                     <!-- BEGIN NAVBAR MENU -->
-                    <ul class="navbar-nav pt-lg-3">
+                    @php
+                        $user = Auth::user();
+                        $userType = $user ? $user->raw_type : null;
+                        $isFinanceUser = ($userType === 2); // Type 2 = Departement Keuangan
+                        $validPrefixes = ['web-admin.', 'akademik.', 'finance.', 'kemahasiswaan.', 'it.', 'library.', 'umum.', 'admisi.'];
+                        $spref = isset($spref) && in_array($spref, $validPrefixes)
+                            ? $spref
+                            : ($user ? $user->prefix : 'root.');
+                    @endphp
+                    
+                    @if($isFinanceUser)
+                        <!-- FINANCE DEPARTMENT SIDEBAR -->
+                        @include('components.finance-sidebar')
+                    @elseif(\Illuminate\Support\Facades\Route::has($spref . 'dashboard-render'))
+                        <!-- DEFAULT ADMIN SIDEBAR -->
+                        <ul class="navbar-nav pt-lg-3">
+                            <li class="nav-item">
+                                <a class="nav-link {{ Route::is((isset($spref) ? $spref : 'root.') . 'dashboard-render', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'dashboard-render') }}">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block"><!-- Download SVG icon from http://tabler.io/icons/icon/home -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
+                                            <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
+                                            <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+                                            <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+                                        </svg>
+                                    </span>
+                                    <span class="nav-link-title"> Dashboard </span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ Route::is((isset($spref) ? $spref : 'root.') . 'profile-render', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'profile-render') }}">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block"><!-- Download SVG icon from http://tabler.io/icons/icon/home -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-user-edit">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+                                            <path d="M6 21v-2a4 4 0 0 1 4 -4h3.5" />
+                                            <path d="M18.42 15.61a2.1 2.1 0 0 1 2.97 2.97l-3.39 3.42h-3v-3l3.42 -3.39z" />
+                                        </svg>
+                                    </span>
+                                    <span class="nav-link-title"> Profile </span>
+                                </a>
+                            </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ Route::is($spref . 'dashboard-render', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'dashboard-render') }}">
-                                <span class="nav-link-icon d-md-none d-lg-inline-block"><!-- Download SVG icon from http://tabler.io/icons/icon/home -->
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
-                                        <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
-                                        <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
-                                        <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
-                                    </svg>
-                                </span>
-                                <span class="nav-link-title"> Homes </span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ Route::is($spref . 'profile-render', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'profile-render') }}">
-                                <span class="nav-link-icon d-md-none d-lg-inline-block"><!-- Download SVG icon from http://tabler.io/icons/icon/home -->
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-user-edit">
-                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
-                                        <path d="M6 21v-2a4 4 0 0 1 4 -4h3.5" />
-                                        <path d="M18.42 15.61a2.1 2.1 0 0 1 2.97 2.97l-3.39 3.42h-3v-3l3.42 -3.39z" />
-                                    </svg>
-                                </span>
-                                <span class="nav-link-title"> Profile </span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ Route::is($spref . 'absensi-render', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'absensi-render') }}">
+                            <a class="nav-link {{ Route::is((isset($spref) ? $spref : 'root.') . 'absensi-render', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'absensi-render') }}">
                                 <span class="nav-link-icon d-md-none d-lg-inline-block"><!-- Download SVG icon from http://tabler.io/icons/icon/home -->
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-user-check">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -255,13 +310,16 @@
                                 <span class="nav-link-title"> Absensi </span>
                             </a>
                         </li>
+                        @if($userType !== 3 && $userType !== 5 && $userType !== 6)
                         <li class="nav-item">
                             <span class="nav-link" href="">
                                 <span class="nav-link-title"> Data Master </span>
                             </span>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link {{ Route::is($spref . 'pengguna.*', request()->path()) ? 'active' : '' }} dropdown-toggle" href="#navbar-form" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
+                        @endif
+                        @if($userType === 0)
+                        <li class="nav-item dropdown" data-dropdown-group="pengguna">
+                            <a class="nav-link {{ Route::is((isset($spref) ? $spref : 'root.') . 'pengguna.*', Request::path()) ? 'active' : '' }} dropdown-toggle" href="#navbar-form" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
                                 <span class="nav-link-icon d-md-none d-lg-inline-block"><!-- Download SVG icon from http://tabler.io/icons/icon/home -->
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-users">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -274,20 +332,29 @@
                                 <span class="nav-link-title"> Master Pengguna </span>
                             </a>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item {{ Route::is($spref . 'pengguna.users-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'pengguna.users-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'pengguna.users-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'pengguna.users-render') }}">
                                     Staff
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'pengguna.dosen-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'pengguna.dosen-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'pengguna.dosen-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'pengguna.dosen-render') }}">
                                     Dosen
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'pengguna.mahasiswa-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'pengguna.mahasiswa-render') }}">
-                                    Mahasiswa
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'pengguna.mahasiswa-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'pengguna.mahasiswa-render') }}">
+                                    Mahasantri
                                 </a>
 
                             </div>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link {{ Route::is($spref . 'publikasi.*', request()->path()) ? 'active' : '' }} dropdown-toggle" href="#navbar-form" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
+                        @endif
+                        @if($userType === 0)
+                        @php
+                            $isPublikasi = Route::is([
+                                (isset($spref) ? $spref : 'root.') . 'publikasi.*',
+                                'master.publikasi.*',
+                                (isset($spref) ? $spref : 'root.') . 'institusi.*'
+                            ]);
+                        @endphp
+                        <li class="nav-item dropdown {{ $isPublikasi ? 'active' : '' }}">
+                            <a class="nav-link {{ $isPublikasi ? 'active' : '' }} dropdown-toggle" href="#navbar-form" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
                                 <span class="nav-link-icon d-md-none d-lg-inline-block"><!-- Download SVG icon from http://tabler.io/icons/icon/home -->
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-news">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -299,24 +366,53 @@
                                 <span class="nav-link-title"> Master Publikasi </span>
                             </a>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item {{ Route::is($spref . 'publikasi.kategori-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'publikasi.kategori-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'publikasi.kategori-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'publikasi.kategori-render') }}">
                                     Kategori
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'publikasi.berita-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'publikasi.berita-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'publikasi.berita-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'publikasi.berita-render') }}">
                                     Berita
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'publikasi.pengumuman-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'publikasi.pengumuman-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'publikasi.pengumuman-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'publikasi.pengumuman-render') }}">
                                     Pengumuman
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'publikasi.galeri-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'publikasi.galeri-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'publikasi.galeri-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'publikasi.galeri-render') }}">
                                     Galeri
+                                </a>
+                                <a class="dropdown-item {{ Route::is('master.publikasi.program-studi.*') ? 'active' : '' }}" href="{{ route('master.publikasi.program-studi.index') }}">
+                                    Program Studi
+                                </a>
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'institusi.profile-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'institusi.profile-render') }}">
+                                    Profil Institusi
+                                </a>
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'institusi.vision-mission-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'institusi.vision-mission-render') }}">
+                                    Visi Misi
+                                </a>
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'institusi.structure-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'institusi.structure-render') }}">
+                                    Struktur Pengurus
+                                </a>
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'institusi.facilities-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'institusi.facilities-render') }}">
+                                    Fasilitas
                                 </a>
 
                             </div>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link {{ Route::is($spref . 'akademik.*', request()->path()) ? 'active' : '' }} dropdown-toggle" href="#navbar-form" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
-                                <span class="nav-link-icon d-md-none d-lg-inline-block"><!-- Download SVG icon from http://tabler.io/icons/icon/home -->
+                        @endif
+                        @if($userType === 0 || $userType === 1)
+                        @php
+                            $isDataAkademik = Route::is([
+                                (isset($spref) ? $spref : 'root.') . 'data-akademik.*',
+                                (isset($spref) ? $spref : 'root.') . 'akademik.data-akademik-mahasiswa-*',
+                                'akademik.bobot-nilai-*',
+                                (isset($spref) ? $spref : 'root.') . 'akademik.krs-*',
+                                (isset($spref) ? $spref : 'root.') . 'akademik.rekap-absensi-*',
+                                (isset($spref) ? $spref : 'root.') . 'akademik.dosen-penasehat-*'
+                            ]);
+
+                            $isMasterAkademik = Route::is((isset($spref) ? $spref : 'root.') . 'akademik.*') && !$isDataAkademik;
+                        @endphp
+                        <li class="nav-item dropdown {{ $isMasterAkademik ? 'active' : '' }}">
+                            <a class="nav-link {{ $isMasterAkademik ? 'active' : '' }} dropdown-toggle" href="#navbar-form" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
+                                 <span class="nav-link-icon d-md-none d-lg-inline-block"><!-- Download SVG icon from http://tabler.io/icons/icon/home -->
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-school">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                         <path d="M22 9l-10 -4l-10 4l10 4l10 -4v6" />
@@ -326,123 +422,178 @@
                                 <span class="nav-link-title"> Master Akademik </span>
                             </a>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item {{ Route::is($spref . 'akademik.taka-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'akademik.taka-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'akademik.taka-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'akademik.taka-render') }}">
                                     Tahun Akademik
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'akademik.fakultas-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'akademik.fakultas-render') }}">
-                                    Fakultas
-                                </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'akademik.prodi-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'akademik.prodi-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'akademik.prodi-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'akademik.prodi-render') }}">
                                     Program Studi
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'akademik.kurikulum-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'akademik.kurikulum-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'akademik.kurikulum-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'akademik.kurikulum-render') }}">
                                     Kurikulum
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'akademik.mata-kuliah-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'akademik.mata-kuliah-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'akademik.mata-kuliah-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'akademik.mata-kuliah-render') }}">
                                     Mata Kuliah
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'akademik.jenis-kelas-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'akademik.jenis-kelas-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'akademik.jenis-kelas-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'akademik.jenis-kelas-render') }}">
                                     Jenis Kelas
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'akademik.kelas-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'akademik.kelas-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'akademik.kelas-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'akademik.kelas-render') }}">
                                     Kelas
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'akademik.waktu-kuliah-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'akademik.waktu-kuliah-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'akademik.waktu-kuliah-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'akademik.waktu-kuliah-render') }}">
                                     Waktu Kuliah
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'akademik.jadwal-kuliah-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'akademik.jadwal-kuliah-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'akademik.jadwal-kuliah-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'akademik.jadwal-kuliah-render') }}">
                                     Jadwal Kuliah
+                                </a>
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'akademik.graduation-settings-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'akademik.graduation-settings-render') }}">
+                                    Pengaturan Kelulusan
                                 </a>
                             </div>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link {{ Route::is($spref . 'pmb.*', request()->path()) ? 'active' : '' }} dropdown-toggle" href="#navbar-form" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
+                        <li class="nav-item dropdown {{ $isDataAkademik ? 'active' : '' }}">
+                            <a class="nav-link {{ $isDataAkademik ? 'active' : '' }} dropdown-toggle" href="#navbar-form" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-users">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                                        <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                        <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+                                    </svg>
+                                </span>
+                                <span class="nav-link-title"> Data Akademik </span>
+                            </a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'akademik.data-akademik-mahasiswa-*', Request::path()) ? 'active' : '' }}"
+                                href="{{ route((isset($spref) ? $spref : 'root.') . 'akademik.data-akademik-mahasiswa-render') }}">
+                                    Mahasantri
+                                </a>
+
+                                <a class="dropdown-item {{ Route::is('akademik.bobot-nilai-*', Request::path()) ? 'active' : '' }}"
+                                href="{{ route('akademik.bobot-nilai-render') }}">
+                                    Bobot Nilai
+                                </a>
+
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'akademik.krs-*', Request::path()) ? 'active' : '' }}"
+                                href="{{ route((isset($spref) ? $spref : 'root.') . 'akademik.krs-render') }}">
+                                    Kartu Rencana Studi
+                                    @php
+                                        try {
+                                            $pendingKrsCount = \App\Models\Mahasantri\KrsMahasiswa::where('status', 'submitted')->count();
+                                        } catch (\Exception $e) {
+                                            $pendingKrsCount = 0;
+                                        }
+                                    @endphp
+                                    @if($pendingKrsCount > 0)
+                                        <span class="badge badge-sm bg-red-lt text-uppercase ms-auto">{{ $pendingKrsCount }}</span>
+                                    @endif
+                                </a>
+
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'akademik.rekap-absensi-*', Request::path()) ? 'active' : '' }}"
+                                href="{{ route((isset($spref) ? $spref : 'root.') . 'akademik.rekap-absensi-render') }}">
+                                    Rekap Absensi
+                                </a>
+
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'akademik.dosen-penasehat-*', Request::path()) ? 'active' : '' }}"
+                                href="{{ route((isset($spref) ? $spref : 'root.') . 'akademik.dosen-penasehat-render') }}">
+                                    Dosen Penasehat
+                                </a>
+                            </div>
+                        </li>
+                        @endif
+                        @if($userType === 0 || $userType === 7)
+                        <li class="nav-item dropdown" data-dropdown-group="pmb">
+                            <a class="nav-link {{ Route::is((isset($spref) ? $spref : 'root.') . 'pmb.*', Request::path()) ? 'active' : '' }} dropdown-toggle" href="#navbar-form" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
                                 <span class="nav-link-icon d-md-none d-lg-inline-block">
                                 <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-settings-plus"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12.483 20.935c-.862 .239 -1.898 -.178 -2.158 -1.252a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.08 .262 1.496 1.308 1.247 2.173" /><path d="M16 19h6" /><path d="M19 16v6" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>
                                 </span>
                                 <span class="nav-link-title"> Master PMB </span>
                             </a>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item {{ Route::is($spref . 'pmb.periode-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'pmb.periode-render') }}">
-                                    Periode Pendaftaran
-                                </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'pmb.jalur-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'pmb.jalur-render') }}">
-                                    Jalur Pendaftaran
-                                </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'pmb.biaya-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'pmb.biaya-render') }}">
-                                    Biaya Pendaftaran
-                                </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'pmb.syarat-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'pmb.syarat-render') }}">
-                                    Syarat Pendaftaran
-                                </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'pmb.gelombang-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'pmb.gelombang-render') }}">
-                                    Gelombang
-                                </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'pmb.jadwal-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'pmb.jadwal-render') }}">
-                                    Jadwal PMB
-                                </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'pmb.pendaftar-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'pmb.pendaftar-render') }}">
-                                    Calon Mahasiswa
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'pmb.management-index', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'pmb.management-index') }}">
+                                    Dashboard PMB
                                 </a>
                             </div>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link {{ Route::is($spref . 'keuangan.*', request()->path()) ? 'active' : '' }} dropdown-toggle" href="#navbar-form" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
+                        @endif
+                        @if($userType === 0)
+                        <li class="nav-item dropdown" data-dropdown-group="keuangan">
+                            <a class="nav-link {{ Route::is((isset($spref) ? $spref : 'root.') . 'keuangan.*', Request::path()) ? 'active' : '' }} dropdown-toggle" href="#navbar-form" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
                                 <span class="nav-link-icon d-md-none d-lg-inline-block">
                                 <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-adjustments-dollar"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M6 4v4" /><path d="M6 12v8" /><path d="M13.366 14.54a2 2 0 1 0 -.216 3.097" /><path d="M12 4v10" /><path d="M12 18v2" /><path d="M16 7a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M18 4v1" /><path d="M18 9v1" /><path d="M21 15h-2.5a1.5 1.5 0 0 0 0 3h1a1.5 1.5 0 0 1 0 3h-2.5" /><path d="M19 21v1m0 -8v1" /></svg>                                </span>
                                 <span class="nav-link-title"> Master Keuangan </span>
                             </a>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item {{ Route::is($spref . 'keuangan.saldo-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'keuangan.saldo-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'keuangan.saldo-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'keuangan.saldo-render') }}">
                                     Saldo
-                                    <span class="badge badge-sm bg-green-lt text-uppercase ms-auto">New</span>
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'keuangan.tagihan-kuliah-group-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'keuangan.tagihan-kuliah-group-render') }}">
-                                    Tagihan Kuliah
-                                    <span class="badge badge-sm bg-green-lt text-uppercase ms-auto">New</span>
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'keuangan.tagihan-kuliah-group-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'keuangan.tagihan-kuliah-group-render') }}">
+                                    Tagihan Kuliah Group
                                 </a>
-       
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'keuangan.tagihan-individual-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'keuangan.tagihan-individual-index') }}">
+                                    Tagihan Individual
+                                </a>
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'keuangan.payment-methods-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'keuangan.payment-methods-index') }}">
+                                    Metode Pembayaran
+                                </a>
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'keuangan.bank-accounts-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'keuangan.bank-accounts-index') }}">
+                                    Rekening Bank
+                                </a>
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'keuangan.billing-templates.*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'keuangan.billing-templates.index') }}">
+                                    Billing Templates
+                                </a>
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'keuangan.pembayaran-manual-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'keuangan.pembayaran-manual-index') }}">
+                                    Pembayaran Manual
+                                </a>
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'keuangan.pembayaran-manual-verification-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'keuangan.pembayaran-manual-verification-queue') }}">
+                                    Verifikasi Bank Manual
+                                </a>
                             </div>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link {{ Route::is($spref . 'infrastruktur.*', request()->path()) ? 'active' : '' }} dropdown-toggle" href="#navbar-form" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
+                        @endif
+                        @if($userType === 0 || $userType === 4)
+                        <li class="nav-item dropdown" data-dropdown-group="infrastruktur">
+                            <a class="nav-link {{ Route::is((isset($spref) ? $spref : 'root.') . 'infrastruktur.*', Request::path()) ? 'active' : '' }} dropdown-toggle" href="#navbar-form" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
                                 <span class="nav-link-icon d-md-none d-lg-inline-block">
                                 <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-building"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 21l18 0" /><path d="M9 8l1 0" /><path d="M9 12l1 0" /><path d="M9 16l1 0" /><path d="M14 8l1 0" /><path d="M14 12l1 0" /><path d="M14 16l1 0" /><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16" /></svg>
                                 </span>
                                 <span class="nav-link-title"> Master Infrastruktur </span>
                             </a>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item {{ Route::is($spref . 'infrastruktur.gedung-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'infrastruktur.gedung-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'infrastruktur.gedung-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'infrastruktur.gedung-render') }}">
                                     Gedung
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'infrastruktur.ruang-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'infrastruktur.ruang-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'infrastruktur.ruang-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'infrastruktur.ruang-render') }}">
                                     Ruang
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'infrastruktur.kategori-barang-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'infrastruktur.kategori-barang-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'infrastruktur.kategori-barang-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'infrastruktur.kategori-barang-render') }}">
                                     Kategori Barang
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'infrastruktur.barang-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'infrastruktur.barang-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'infrastruktur.barang-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'infrastruktur.barang-render') }}">
                                     Barang
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'infrastruktur.mutasi-barang-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'infrastruktur.mutasi-barang-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'infrastruktur.mutasi-barang-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'infrastruktur.mutasi-barang-render') }}">
                                     Mutasi Barang
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'infrastruktur.pengadaan-barang-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'infrastruktur.pengadaan-barang-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'infrastruktur.pengadaan-barang-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'infrastruktur.pengadaan-barang-render') }}">
                                     Pengadaan Barang
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'infrastruktur.inventaris-barang-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'infrastruktur.inventaris-barang-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'infrastruktur.inventaris-barang-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'infrastruktur.inventaris-barang-render') }}">
                                     Inventaris Barang
                                 </a>
                             </div>
                         </li>
+                        @endif
 
+                        @if($userType === 0)
                         <li class="nav-item">
                             <span class="nav-link" href="">
                                 <span class="nav-link-title"> Pengaturan </span>
                             </span>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link {{ Route::is($spref . 'pengaturan.*', request()->path()) ? 'active' : '' }} dropdown-toggle" href="#navbar-form" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
+                        <li class="nav-item dropdown" data-dropdown-group="pengaturan">
+                            <a class="nav-link {{ Route::is((isset($spref) ? $spref : 'root.') . 'pengaturan.*', Request::path()) ? 'active' : '' }} dropdown-toggle" href="#navbar-form" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
                                 <span class="nav-link-icon d-md-none d-lg-inline-block"><!-- Download SVG icon from http://tabler.io/icons/icon/home -->
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-settings">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -453,17 +604,22 @@
                                 <span class="nav-link-title"> Pengaturan </span>
                             </a>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item {{ Route::is($spref . 'pengaturan.log-aktivitas-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'pengaturan.log-aktivitas-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'pengaturan.log-aktivitas-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'pengaturan.log-aktivitas-render') }}">
                                     Log Aktivitas
                                 </a>
-                                <a class="dropdown-item {{ Route::is($spref . 'pengaturan.web-settings-*', request()->path()) ? 'active' : '' }}" href="{{ route($spref . 'pengaturan.web-settings-render') }}">
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'pengaturan.web-settings-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'pengaturan.web-settings-render') }}">
                                     Pengaturan Web
+                                </a>
+                                <a class="dropdown-item {{ Route::is((isset($spref) ? $spref : 'root.') . 'pengaturan.homepage-*', Request::path()) ? 'active' : '' }}" href="{{ route((isset($spref) ? $spref : 'root.') . 'pengaturan.homepage-render') }}">
+                                    Pengaturan Homepage
                                 </a>
 
                             </div>
                         </li>
+                        @endif
 
                     </ul>
+                    @endif
                     <!-- END NAVBAR MENU -->
                 </div>
             </div>
@@ -510,76 +666,81 @@
                                         <div class="btn-close ms-auto" data-bs-dismiss="dropdown"></div>
                                     </div>
                                     <div class="list-group list-group-flush list-group-hoverable">
-                                        <div class="list-group-item">
-                                            <div class="row align-items-center">
-                                                <div class="col-auto"><span class="status-dot status-dot-animated bg-red d-block"></span>
-                                                </div>
-                                                <div class="col text-truncate">
-                                                    <a href="#" class="text-body d-block">Pengumuman: Jadwal UTS</a>
-                                                    <div class="d-block text-secondary text-truncate mt-n1">Jadwal UTS Semester Ganjil 2023/2024 telah dirilis</div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <a href="#" class="list-group-item-actions">
-                                                        <!-- Download SVG icon from http://tabler.io/icons/icon/star -->
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-muted icon-2">
-                                                            <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="list-group-item">
-                                            <div class="row align-items-center">
-                                                <div class="col-auto"><span class="status-dot d-block"></span></div>
-                                                <div class="col text-truncate">
-                                                    <a href="#" class="text-body d-block">Info: Pembayaran UKT</a>
-                                                    <div class="d-block text-secondary text-truncate mt-n1">Pengingat: Batas akhir pembayaran UKT tanggal 30 September 2023</div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <a href="#" class="list-group-item-actions show">
-                                                        <!-- Download SVG icon from http://tabler.io/icons/icon/star -->
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-yellow icon-2">
-                                                            <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="list-group-item">
-                                            <div class="row align-items-center">
-                                                <div class="col-auto"><span class="status-dot d-block"></span></div>
-                                                <div class="col text-truncate">
-                                                    <a href="#" class="text-body d-block">Akademik: KRS</a>
-                                                    <div class="d-block text-secondary text-truncate mt-n1">Pengisian KRS akan dibuka pada tanggal 15 September 2023</div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <a href="#" class="list-group-item-actions">
-                                                        <!-- Download SVG icon from http://tabler.io/icons/icon/star -->
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-muted icon-2">
-                                                            <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="list-group-item">
-                                            <div class="row align-items-center">
-                                                <div class="col-auto"><span class="status-dot status-dot-animated bg-green d-block"></span>
-                                                </div>
-                                                <div class="col text-truncate">
-                                                    <a href="#" class="text-body d-block">Info: Beasiswa</a>
-                                                    <div class="d-block text-secondary text-truncate mt-n1">Pendaftaran beasiswa prestasi telah dibuka</div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <a href="#" class="list-group-item-actions">
-                                                        <!-- Download SVG icon from http://tabler.io/icons/icon/star -->
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-muted icon-2">
-                                                            <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
-                                                        </svg>
-                                                    </a>
+                                        @php
+                                            // Get latest pengumuman and berita for notifications
+                                            $notifications = collect();
+                                            
+                                            try {
+                                                $pengumuman = \App\Models\Publikasi\Pengumuman::where('status', 'Publish')
+                                                    
+                                                    ->latest()
+                                                    ->take(3)
+                                                    ->get();
+                                                
+                                                foreach($pengumuman as $item) {
+                                                    $notifications->push([
+                                                        'type' => 'pengumuman',
+                                                        'title' => 'Pengumuman: ' . $item->name,
+                                                        'description' => strip_tags($item->content ?? $item->description ?? ''),
+                                                        'url' => '#',
+                                                        'date' => $item->created_at,
+                                                        'status' => 'red'
+                                                    ]);
+                                                }
+                                                
+                                                $berita = \App\Models\Publikasi\Berita::where('status', 'Publish')
+                                                    
+                                                    ->latest()
+                                                    ->take(2)
+                                                    ->get();
+                                                
+                                                foreach($berita as $item) {
+                                                    $notifications->push([
+                                                        'type' => 'berita',
+                                                        'title' => 'Berita: ' . $item->name,
+                                                        'description' => strip_tags($item->content ?? $item->description ?? ''),
+                                                        'url' => '#',
+                                                        'date' => $item->created_at,
+                                                        'status' => 'green'
+                                                    ]);
+                                                }
+                                                
+                                                $notifications = $notifications->sortByDesc('date')->take(4);
+                                            } catch (\Exception $e) {
+                                                // Fallback to empty collection if tables don't exist
+                                                $notifications = collect();
+                                            }
+                                        @endphp
+                                        
+                                        @forelse($notifications as $notification)
+                                            <div class="list-group-item">
+                                                <div class="row align-items-center">
+                                                    <div class="col-auto">
+                                                        <span class="status-dot @if($notification['status'] == 'red') status-dot-animated bg-red @elseif($notification['status'] == 'green') status-dot-animated bg-green @else @endif d-block"></span>
+                                                    </div>
+                                                    <div class="col text-truncate">
+                                                        <a href="{{ $notification['url'] }}" class="text-body d-block">{{ $notification['title'] }}</a>
+                                                        <div class="d-block text-secondary text-truncate mt-n1">{{ Str::limit($notification['description'], 60) }}</div>
+                                                    </div>
+                                                    <div class="col-auto">
+                                                        <a href="{{ $notification['url'] }}" class="list-group-item-actions">
+                                                            <!-- Download SVG icon from http://tabler.io/icons/icon/star -->
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-muted icon-2">
+                                                                <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
+                                                            </svg>
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        @empty
+                                            <div class="list-group-item">
+                                                <div class="row align-items-center">
+                                                    <div class="col text-center">
+                                                        <div class="text-muted">Tidak ada notifikasi terbaru</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforelse
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
@@ -693,25 +854,25 @@
                     </div>
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown" aria-label="Open user menu">
-                            <span class="avatar avatar-sm" style="background-image: url({{ $user == null ? '' : $user->photo }})"> </span>
+                            <span class="avatar avatar-sm" style="background-image: url({{ Auth::user() && Auth::user()->photo ? Auth::user()->photo : asset('storage/images/profile/default.jpg') }})"> </span>
                             <div class="d-none d-xl-block ps-2">
-                                <div>{{ $user == null ? 'Guest Name' : $user->name }}</div>
-                                <div class="mt-1 small text-secondary">{{ $user == null ? 'Guest Position' : $user->type }}</div>
+                                <div>{{ Auth::user() ? Auth::user()->name : 'Guest Name' }}</div>
+                                <div class="mt-1 small text-secondary">{{ Auth::user() ? Auth::user()->type : 'Web Administrator' }}</div>
                             </div>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                             <a href="#" class="dropdown-item">Status</a>
-                            <a href="{{ route($spref . 'profile-render') }}" class="dropdown-item">Profile</a>
+                            <a href="{{ route((isset($spref) ? $spref : 'root.') . 'profile-render') }}" class="dropdown-item">Profile</a>
                             <a href="#" class="dropdown-item">Feedback</a>
                             <div class="dropdown-divider"></div>
                             <a href="./settings.html" class="dropdown-item">Settings</a>
-                            <a href="{{ route($spref . 'handle-logout') }}" class="dropdown-item">Logout</a>
+                            <a href="{{ route((isset($spref) ? $spref : 'root.') . 'handle-logout') }}" class="dropdown-item">Logout</a>
                         </div>
                     </div>
                 </div>
                 <div class="collapse navbar-collapse" id="navbar-menu">
                     <!-- BEGIN NAVBAR MENU -->
-                    <ul class="navbar-nav">
+                    <!-- <ul class="navbar-nav">
 
 
                         <select class="form-select form-select-sm form-select-navbar" aria-label="Select theme">
@@ -719,7 +880,7 @@
                             <option value="light">Light</option>
                             <option value="dark">Dark</option>
                         </select>
-                    </ul>
+                    </ul> -->
                     <!-- END NAVBAR MENU -->
                 </div>
             </div>
@@ -732,8 +893,8 @@
                     <div class="row g-2 align-items-center">
                         <div class="col">
                             <!-- Page pre-title -->
-                            <div class="page-pretitle">{{ $menus }}</div>
-                            <h2 class="page-title">{{ $pages }}</h2>
+                            <div class="page-pretitle">{{ isset($menus) ? $menus : 'Dashboard' }}</div>
+                            <h2 class="page-title">{{ isset($pages) ? $pages : 'Home' }}</h2>
                         </div>
                         <!-- Page title actions -->
                         <div class="col-auto ms-auto d-print-none">
@@ -780,7 +941,7 @@
                             <ul class="list-inline list-inline-dots mb-0">
                                 <li class="list-inline-item">
                                     Copyright &copy; {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
-                                    <a href="." class="link-secondary">{{ $academy }}</a>. All rights reserved.
+                                    <a href="." class="link-secondary">{{ isset($academy) ? $academy : 'SIAKAD' }}</a>. All rights reserved.
                                 </li>
                                 <li class="list-inline-item">
                                     <a href="./changelog.html" class="link-secondary" rel="noopener">Tabler v1.2.0 </a>
@@ -1039,7 +1200,8 @@
     <script src="{{ asset('dashboard') }}/dist/js/tabler.min.js?1747482948" defer></script>
     <!-- END GLOBAL MANDATORY SCRIPTS -->
     <!-- BEGIN DEMO SCRIPTS -->
-    <script src="./preview/js/demo.min.js?1747482948" defer></script>
+    <script src="{{ asset('dashboard') }}/preview/js/demo.min.js?1747482948" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         flatpickr("input[type='date']", {
@@ -1050,6 +1212,63 @@
     <!-- BEGIN PAGE SCRIPTS -->
     @yield('custom-js')
     <!-- END PAGE SCRIPTS -->
+    
+    @if(session('terminal_popup'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            Swal.fire({
+                icon: 'info',
+                title: 'Informasi',
+                text: @json(session('terminal_popup_message')),
+                confirmButtonText: 'OK'
+            });
+        });
+    </script>
+    @elseif(session('error') && session('alert-title') === 'Akses Fitur Akademik Ditolak')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            Swal.fire({
+                icon: 'info',
+                title: 'Informasi',
+                text: @json(session('error')),
+                confirmButtonText: 'OK'
+            });
+        });
+    </script>
+    @endif
+    
+    <!-- Enhanced Dropdown Fix - Fixed to not interfere with search functionality -->
+    <!-- <script src="{{ asset('js/enhanced-dropdown-fix.js') }}"></script> -->
+    <!-- //<script src="{{ asset('js/sidebar-navigation-fix.js') }}"></script> -->
+     <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // 1. Cari elemen menu yang sudah ditandai 'active' oleh Laravel (PHP)
+            let activeItems = document.querySelectorAll('.dropdown-item.active, .nav-item.active');
+
+            activeItems.forEach(function(item) {
+                // 2. Cari bungkus dropdown-nya
+                let dropdownMenu = item.closest('.dropdown-menu');
+                if (dropdownMenu) {
+                    // 3. Buka dropdown-nya secara visual
+                    dropdownMenu.classList.add('show');
+                    dropdownMenu.setAttribute('data-bs-popper', 'static');
+
+                    // 4. Cari induk utamanya (Misal: Master Akademik / Master Publikasi)
+                    let parentNavItem = dropdownMenu.closest('.nav-item.dropdown');
+                    if (parentNavItem) {
+                        parentNavItem.classList.add('active');
+                        
+                        // 5. Putar panah icon panahnya ke bawah
+                        let toggleBtn = parentNavItem.querySelector('.dropdown-toggle');
+                        if (toggleBtn) {
+                            toggleBtn.classList.add('show');
+                            toggleBtn.setAttribute('aria-expanded', 'true');
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

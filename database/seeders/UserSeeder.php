@@ -10,7 +10,7 @@ use Carbon\Carbon;
 // DEFAULT AUTHENTIKASI
 use App\Models\User;
 use App\Models\Dosen;
-use App\Models\Mahasiswa;
+use App\Models\Mahasantri;
 
 class UserSeeder extends Seeder
 {
@@ -83,28 +83,40 @@ class UserSeeder extends Seeder
         // Create Dosen Users
         $dosenUsers = [
             [
-                'name' => 'Dosen A',
-                'username' => 'dosen.a',
-                'email' => 'dosen.a@example.com',
+                'name' => 'Ustadz Dr. Dini Mahdany, M.Pd',
+                'username' => 'dosen1',
+                'email' => 'dosen1@gmail.com',
                 'phone' => '080012345671',
             ],
             [
-                'name' => 'Dosen B',
-                'username' => 'dosen.b',
-                'email' => 'dosen.b@example.com',
+                'name' => 'Ustadz Muhammad Zainal Ilmi, M.Pd.',
+                'username' => 'dosen2',
+                'email' => 'dosen2@gmail.com',
                 'phone' => '080012345672',
             ],
             [
-                'name' => 'Dosen C',
-                'username' => 'dosen.c',
-                'email' => 'dosen.c@example.com',
+                'name' => 'Ustadz Muhammad Zainal Ilmi, M.Pd.',
+                'username' => 'dosen3',
+                'email' => 'dosen3@gmail.com',
                 'phone' => '080012345673',
             ],
             [
-                'name' => 'Dosen D',
-                'username' => 'dosen.d',
-                'email' => 'dosen.d@example.com',
+                'name' => 'Ustadz H. Ahmad Fauzi Jailani, Lc.',
+                'username' => 'dosen4',
+                'email' => 'dosen4@gmail.com',
                 'phone' => '080012345674',
+            ],
+            [
+                'name' => 'Ustadz Abdul Qadir Jailani',
+                'username' => 'dosen5',
+                'email' => 'dosen5@gmail.com',
+                'phone' => '080012345675',
+            ],
+            [
+                'name' => 'Ustadz Ahmad Ramadhan',
+                'username' => 'dosen6',
+                'email' => 'dosen6@gmail.com',
+                'phone' => '080012345676',
             ],
         ];
 
@@ -116,14 +128,14 @@ class UserSeeder extends Seeder
                 'type' => '1',
                 'email' => $dosen['email'],
                 'phone' => $dosen['phone'],
-                'password' => Hash::make('Dosen123'),
+                'password' => Hash::make('dosen123'),
             ]);
         }
 
-        // Create Mahasiswa Users
+        // Create Mahasantri Users
         $mahasiswaUsers = [
             [
-                'name' => 'Mahasiswa A',
+                'name' => 'Mahasantri A',
                 'username' => 'mahasiswa.a',
                 'email' => 'mahasiswa.a@example.com',
                 'phone' => '080012345670',
@@ -134,7 +146,7 @@ class UserSeeder extends Seeder
                 'kelas_id' => 1,
             ],
             [
-                'name' => 'Mahasiswa B',
+                'name' => 'Mahasantri B',
                 'username' => 'mahasiswa.b',
                 'email' => 'mahasiswa.b@example.com',
                 'phone' => '080012345671',
@@ -145,14 +157,14 @@ class UserSeeder extends Seeder
                 'kelas_id' => 3,
             ],
             [
-                'name' => 'Mahasiswa C',
+                'name' => 'Mahasantri C',
                 'username' => 'mahasiswa.c',
                 'email' => 'mahasiswa.c@example.com',
                 'phone' => '080012345672',
                 'type'  => 0,
             ],
             [
-                'name' => 'Mahasiswa D',
+                'name' => 'Mahasantri D',
                 'username' => 'mahasiswa.d',
                 'email' => 'mahasiswa.d@example.com',
                 'phone' => '080012345673',
@@ -161,7 +173,7 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($mahasiswaUsers as $mahasiswa) {
-            Mahasiswa::create([
+            Mahasantri::create([
                 'name' => $mahasiswa['name'],
                 'code' => Str::random(6),
                 'username' => $mahasiswa['username'],

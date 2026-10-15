@@ -21,7 +21,7 @@ class KurikulumController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Kurikulum";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         $data['prodi'] = ProgramStudi::all();
         $data['kurikulum'] = Kurikulum::all();
 
@@ -50,7 +50,7 @@ class KurikulumController extends Controller
                 'taka_ended' => $request->taka_ended,
                 'name' => $request->name,
                 'code' => $code,
-                'desc' => $request->desc,
+                'desc' => $request->desc ?? '', // Provide empty string if null
                 'status' => $request->status,
                 'created_by' => Auth::id(),
             ]);
@@ -84,7 +84,7 @@ class KurikulumController extends Controller
                 'taka_start' => $request->taka_start,
                 'taka_ended' => $request->taka_ended,
                 'name' => $request->name,
-                'desc' => $request->desc,
+                'desc' => $request->desc ?? '', // Provide empty string if null
                 'status' => $request->status,
                 'updated_by' => Auth::id(),
             ]);

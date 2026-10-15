@@ -24,8 +24,10 @@ class UsersController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Pengguna";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
-        $data['users'] = User::latest()->get();
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
+        
+        // Only get non-deleted users
+        $data['users'] = User::whereNull('deleted_at')->latest()->get();
         
         return view('master.pengguna.users-index', $data, compact('user'));
     }
@@ -36,9 +38,10 @@ class UsersController extends Controller
         $data['webs'] = WebSetting::first();
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
-        $data['pages'] = "Pengguna";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
-        $data['users'] = User::where('code', $code)->first();
+        $data['pages'] = "Detail Pengguna";
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
+        
+        $data['users'] = User::where('code', $code)->firstOrFail();
         
         return view('master.pengguna.users-views', $data, compact('user'));
     }
@@ -124,8 +127,6 @@ class UsersController extends Controller
                 'numb_nitk' => 'nullable|string|max:20',
                 'numb_staff' => 'nullable|string|max:20'
             ]);
-
-            // dd($rules);
 
             $request->validate($rules);
 
@@ -252,17 +253,113 @@ class UsersController extends Controller
                 return redirect()->back()->with('error', 'Tidak dapat menghapus akun sendiri');
             }
 
+            // Update deleted_by before soft deletion
             $user->update([
                 'deleted_by' => Auth::id()
             ]);
+            
+            // Soft delete (data masih ada di database dengan deleted_at timestamp)
             $user->delete();
 
             DB::commit();
-            return redirect()->back()->with('success', 'Pengguna berhasil dihapus');
+            return redirect()->back()->with('success', 'Pengguna berhasil dihapus (soft delete)');
 
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Gagal menghapus Pengguna: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Force delete user (permanent deletion)
+     */
+    public function forceDeleteUsers($code)
+    {
+        try {
+            DB::beginTransaction();
+
+            $user = User::withTrashed()->where('code', $code)->firstOrFail();
+            
+            // Prevent self-deletion
+            if ($user->id === Auth::id()) {
+                return redirect()->back()->with('error', 'Tidak dapat menghapus akun sendiri');
+            }
+
+            // Delete user photo if exists (only for permanent deletion)
+            if ($user->getRawOriginal('photo') && $user->getRawOriginal('photo') !== 'default.jpg') {
+                Storage::disk('public')->delete('images/profile/' . $user->getRawOriginal('photo'));
+            }
+
+            // Force delete to permanently remove from database
+            $user->forceDelete();
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Pengguna berhasil dihapus permanen dari database');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal menghapus Pengguna permanen: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Soft delete user (alternative method if needed)
+     */
+    public function softDeleteUsers($code)
+    {
+        try {
+            DB::beginTransaction();
+
+            $user = User::where('code', $code)->firstOrFail();
+            
+            // Prevent self-deletion
+            if ($user->id === Auth::id()) {
+                return redirect()->back()->with('error', 'Tidak dapat menghapus akun sendiri');
+            }
+
+            // Update deleted_by before soft deletion
+            $user->update([
+                'deleted_by' => Auth::id()
+            ]);
+            
+            // Soft delete (data masih ada di database dengan deleted_at timestamp)
+            $user->delete();
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Pengguna berhasil dinonaktifkan (soft delete)');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal menonaktifkan Pengguna: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Restore soft deleted user
+     */
+    public function restoreUsers($code)
+    {
+        try {
+            DB::beginTransaction();
+
+            $user = User::withTrashed()->where('code', $code)->firstOrFail();
+            
+            if (!$user->trashed()) {
+                return redirect()->back()->with('error', 'Pengguna tidak dalam status terhapus');
+            }
+
+            $user->restore();
+            $user->update([
+                'deleted_by' => null,
+                'updated_by' => Auth::id()
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Pengguna berhasil dipulihkan');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal memulihkan Pengguna: ' . $e->getMessage());
         }
     }
 }

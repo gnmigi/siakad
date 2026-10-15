@@ -25,7 +25,7 @@ class InventarisBarangController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Inventaris Barang";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         $data['inventarisBarangs'] = InventarisBarang::with(['barang', 'lokasi'])->latest()->get();
         $data['barangs'] = Barang::all();
         $data['ruangs'] = Ruang::all();

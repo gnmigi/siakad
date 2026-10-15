@@ -192,7 +192,7 @@
                                 @csrf
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label for="kurikulum_id" class="form-label">Kurikulum</label>
+                                        <label for="kurikulum_id" class="form-label">Kurikulum <span class="text-danger">*</span></label>
                                         <select class="form-select" name="kurikulum_id" id="kurikulum_id">
                                             <option value="">Pilih Kurikulum</option>
                                             @foreach ($kurikulum as $k)
@@ -204,7 +204,7 @@
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="prodi_id" class="form-label">Program Studi</label>
+                                        <label for="prodi_id" class="form-label">Program Studi <span class="text-danger">*</span></label>
                                         <select class="form-select" name="prodi_id" id="prodi_id">
                                             <option value="">Pilih Program Studi</option>
                                             @foreach ($program_studi as $p)
@@ -228,7 +228,7 @@
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="dosen1_id" class="form-label">Dosen 1</label>
+                                        <label for="dosen1_id" class="form-label">Dosen 1 <span class="text-danger">*</span></label>
                                         <select class="form-select" name="dosen1_id" id="dosen1_id">
                                             <option value="">Pilih Dosen 1</option>
                                             @foreach ($dosens as $dosen)
@@ -264,30 +264,31 @@
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="semester" class="form-label">Semester</label>
+                                        <label for="semester" class="form-label">Semester <span class="text-danger">*</span></label>
                                         <input type="number" class="form-control" name="semester" id="semester" min="1" max="14" placeholder="Contoh: 1">
                                         @error('semester')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="bsks" class="form-label">Beban SKS</label>
+                                        <label for="bsks" class="form-label">Beban SKS <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" name="bsks" id="bsks" placeholder="Contoh: 3">
                                         @error('bsks')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="name" class="form-label">Nama Mata Kuliah</label>
-                                        <input type="text" class="form-control" name="name" id="name" placeholder="Contoh: Pemrograman Web">
+                                        <label for="name" class="form-label">Nama Mata Kuliah <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="name" id="name" placeholder="Contoh: Bahasa Arab">
                                         @error('name')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="photo" class="form-label">Foto (Opsional)</label>
-                                        <input type="file" class="form-control" name="photo" id="photo" accept="image/*">
-                                        @error('photo')
+                                        <label for="code" class="form-label">Kode Mata Kuliah <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="code" id="code" placeholder="Contoh: MK-001 atau kosongkan untuk otomatis">
+                                        <small class="text-muted">Kosongkan untuk kode otomatis</small>
+                                        @error('code')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
@@ -306,14 +307,31 @@
                                         @enderror
                                     </div>
                                     <div class="col-12 mb-3">
-                                        <label for="desc" class="form-label">Deskripsi</label>
+                                        <label for="desc" class="form-label">Deskripsi <span class="text-danger">*</span></label>
                                         <textarea name="desc" id="desc" class="form-control" rows="3" placeholder="Deskripsi mata kuliah"></textarea>
                                         @error('desc')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                                        <select class="form-select" name="status" id="status">
+                                            <option value="Aktif" selected>Aktif</option>
+                                            <option value="Tidak Aktif">Tidak Aktif</option>
+                                        </select>
+                                        @error('status')
+                                            <small class="text-danger">{{ $message }}</small>
+                                        @enderror
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="photo" class="form-label">Foto (Opsional)</label>
+                                        <input type="file" class="form-control" name="photo" id="photo" accept="image/*">
+                                        @error('photo')
+                                            <small class="text-danger">{{ $message }}</small>
+                                        @enderror
+                                    </div>
                                     <div class="col-12 d-flex justify-content-end">
-                                        <button type="submit" class="btn btn-primary">
+                                        <button type="submit" class="btn btn-primary" onclick="return validateForm()">
                                             <i class="fas fa-save me-2"></i>Simpan
                                         </button>
                                     </div>
@@ -322,9 +340,43 @@
                         </div>
                     </div>
                     
+                    <!-- Filters -->
+                    <div class="row mb-3">
+                        <div class="col-md-4 mb-2">
+                            <label for="filter-semester" class="form-label">Filter Semester</label>
+                            <select class="form-select" id="filter-semester">
+                                <option value="">Semua Semester</option>
+                                @foreach($semesters as $semester)
+                                    <option value="{{ $semester }}">Semester {{ $semester }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label for="filter-prodi" class="form-label">Filter Program Studi</label>
+                            <select class="form-select" id="filter-prodi">
+                                <option value="">Semua Program Studi</option>
+                                @foreach($program_studi as $prodi)
+                                    <option value="{{ $prodi->id }}">{{ $prodi->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label for="filter-search" class="form-label">Pencarian</label>
+                            <input type="text" class="form-control" id="filter-search" placeholder="Cari nama atau kode mata kuliah...">
+                        </div>
+                    </div>
+
+                    <!-- Loading indicator -->
+                    <div id="loading-indicator" class="text-center py-3" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Memuat data...</p>
+                    </div>
+
                     <!-- Table -->
                     <div class="table-responsive mt-3">
-                        <table class="table">
+                        <table class="table" id="mata-kuliah-table">
                             <thead>
                                 <tr>
                                     <th class="text-center">No</th>
@@ -336,7 +388,7 @@
                                     <th class="text-center">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="mata-kuliah-tbody">
                                 @foreach ($mata_kuliah as $key => $item)
                                     <tr>
                                         <td data-label="No">{{ ++$key }}</td>
@@ -368,6 +420,13 @@
                                 @endforeach
                             </tbody>
                         </table>
+                        
+                        <!-- No data message -->
+                        <div id="no-data-message" class="text-center py-4" style="display: none;">
+                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Tidak ada data yang ditemukan</h5>
+                            <p class="text-muted">Coba ubah filter atau kata kunci pencarian</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -514,16 +573,16 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="edit_name{{ $item->code }}" class="form-label">Nama Mata Kuliah</label>
-                                    <input type="text" class="form-control" name="name" id="edit_name{{ $item->code }}" value="{{ $item->name }}">
+                                    <label for="edit_name{{ $item->code }}" class="form-label">Nama Mata Kuliah <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="name" id="edit_name{{ $item->code }}" value="{{ $item->name }}" required>
                                     @error('name')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="edit_photo{{ $item->code }}" class="form-label">Foto (Opsional)</label>
-                                    <input type="file" class="form-control" name="photo" id="edit_photo{{ $item->code }}" accept="image/*">
-                                    @error('photo')
+                                    <label for="edit_code{{ $item->code }}" class="form-label">Kode Mata Kuliah <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="code" id="edit_code{{ $item->code }}" value="{{ $item->code }}" required>
+                                    @error('code')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
@@ -545,6 +604,16 @@
                                     <label for="edit_desc{{ $item->code }}" class="form-label">Deskripsi</label>
                                     <textarea name="desc" id="edit_desc{{ $item->code }}" class="form-control" rows="3">{{ $item->desc }}</textarea>
                                     @error('desc')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="edit_status{{ $item->code }}" class="form-label">Status Mata Kuliah <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="status" id="edit_status{{ $item->code }}" required>
+                                        <option value="Aktif" {{ $item->status == 'Aktif' ? 'selected' : '' }}>Aktif</option>
+                                        <option value="Tidak Aktif" {{ $item->status == 'Tidak Aktif' ? 'selected' : '' }}>Tidak Aktif</option>
+                                    </select>
+                                    @error('status')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
@@ -570,32 +639,113 @@
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 
     <script>
-        // Initialize DataTable
+        let filterTimeout;
+        const filterUrl = "{{ route($spref . 'akademik.mata-kuliah-filter') }}";
+
         $(document).ready(function() {
-            $('.table').DataTable({
-                language: {
-                    search: "Cari:",
-                    lengthMenu: "Tampilkan _MENU_ data per halaman",
-                    zeroRecords: "Data tidak ditemukan",
-                    info: "Menampilkan halaman _PAGE_ dari _PAGES_",
-                    infoEmpty: "Tidak ada data yang tersedia",
-                    infoFiltered: "(difilter dari _MAX_ total data)",
-                    paginate: {
-                        first: "Pertama",
-                        last: "Terakhir",
-                        next: "Selanjutnya",
-                        previous: "Sebelumnya"
+            // Initialize filters
+            initializeFilters();
+        });
+
+        function initializeFilters() {
+            // Add event listeners for real-time filtering
+            $('#filter-semester, #filter-prodi').on('change', function() {
+                applyFilters();
+            });
+
+            $('#filter-search').on('input', function() {
+                // Debounce search input to avoid too many requests
+                clearTimeout(filterTimeout);
+                filterTimeout = setTimeout(function() {
+                    applyFilters();
+                }, 500);
+            });
+        }
+
+        function applyFilters() {
+            const semester = $('#filter-semester').val();
+            const prodiId = $('#filter-prodi').val();
+            const search = $('#filter-search').val();
+
+            // Show loading indicator
+            $('#loading-indicator').show();
+            $('#mata-kuliah-table').hide();
+            $('#no-data-message').hide();
+
+            // Make AJAX request
+            $.ajax({
+                url: filterUrl,
+                method: 'GET',
+                data: {
+                    semester: semester,
+                    prodi_id: prodiId,
+                    search: search
+                },
+                success: function(response) {
+                    if (response.success) {
+                        updateTable(response.data);
+                    } else {
+                        showError('Gagal memuat data: ' + response.message);
                     }
                 },
-                responsive: true,
-                pageLength: 10,
-                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
-                order: [[0, 'asc']],
-                columnDefs: [
-                    { orderable: false, targets: -1 }
-                ]
+                error: function(xhr, status, error) {
+                    console.error('Filter error:', error);
+                    showError('Terjadi kesalahan saat memuat data');
+                },
+                complete: function() {
+                    $('#loading-indicator').hide();
+                }
             });
-        });
+        }
+
+        function updateTable(data) {
+            const tbody = $('#mata-kuliah-tbody');
+            tbody.empty();
+
+            if (data.length === 0) {
+                $('#mata-kuliah-table').hide();
+                $('#no-data-message').show();
+                return;
+            }
+
+            $('#mata-kuliah-table').show();
+            $('#no-data-message').hide();
+
+            data.forEach(function(item, index) {
+                const row = `
+                    <tr>
+                        <td data-label="No">${item.no}</td>
+                        <td data-label="Nama Mata Kuliah">
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold">${item.name}</span>
+                                <small class="text-muted">${item.program_studi}</small>
+                            </div>
+                        </td>
+                        <td data-label="Kode">${item.code}</td>
+                        <td data-label="Program Studi">${item.program_studi}</td>
+                        <td data-label="Semester">${item.semester}</td>
+                        <td data-label="SKS">${item.bsks}</td>
+                        <td data-label="Aksi">${item.actions}</td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+
+            // Reinitialize tooltips for new content
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        }
+
+        function showError(message) {
+            $('#mata-kuliah-table').show();
+            $('#no-data-message').hide();
+            
+            Swal.fire({
+                title: 'Error!',
+                text: message,
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
 
         // Konfirmasi delete dengan SweetAlert
         function confirmDelete(code) {
@@ -613,6 +763,34 @@
                     document.getElementById('delete-form-' + code).submit();
                 }
             });
+        }
+
+        // Client-side validation function
+        function validateForm() {
+            const requiredFields = [
+                { id: 'kurikulum_id', name: 'Kurikulum' },
+                { id: 'prodi_id', name: 'Program Studi' },
+                { id: 'dosen1_id', name: 'Dosen 1' },
+                { id: 'semester', name: 'Semester' },
+                { id: 'bsks', name: 'Beban SKS' },
+                { id: 'name', name: 'Nama Mata Kuliah' },
+                { id: 'desc', name: 'Deskripsi' }
+            ];
+
+            for (let field of requiredFields) {
+                const element = document.getElementById(field.id);
+                if (!element.value.trim()) {
+                    Swal.fire({
+                        title: 'Field Wajib Kosong!',
+                        text: `${field.name} harus diisi.`,
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                    element.focus();
+                    return false;
+                }
+            }
+            return true;
         }
     </script>
 @endsection

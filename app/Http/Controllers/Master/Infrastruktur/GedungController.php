@@ -23,7 +23,7 @@ class GedungController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Master";
         $data['pages'] = "Gedung";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         $data['gedungs'] = Gedung::latest()->get();
         
         return view('master.infrastruktur.gedung-index', $data, compact('user'));

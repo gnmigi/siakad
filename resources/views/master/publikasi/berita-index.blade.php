@@ -3,6 +3,7 @@
 @section('custom-css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="{{ asset('css/dynamic-content-builder.css') }}">
     <style>
         /* Stats cards */
         .bg-light-primary {
@@ -58,6 +59,15 @@
             padding-top: 0.75rem;
             padding-bottom: 0.75rem;
             text-align: left;
+            color: #374151 !important;
+        }
+
+        [data-bs-theme="dark"] .table td {
+            color: #f9fafb !important;
+        }
+
+        [data-bs-theme="dark"] .table tbody tr td {
+            color: #ffffff !important;
         }
 
         .table th.text-center, .table td.text-center {
@@ -90,6 +100,22 @@
         .badge {
             padding: 0.5em 0.75em;
             font-weight: 500;
+            color: #ffffff !important;
+        }
+
+        .badge.bg-success {
+            background-color: #28a745 !important;
+            color: #ffffff !important;
+        }
+
+        .badge.bg-warning {
+            background-color: #ffc107 !important;
+            color: #212529 !important;
+        }
+
+        .badge.bg-secondary {
+            background-color: #6c757d !important;
+            color: #ffffff !important;
         }
 
         /* Collapsible form */
@@ -224,10 +250,37 @@
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
+                                    <!-- Content Type Selection -->
                                     <div class="col-md-12 mb-3">
+                                        <label class="form-label">Tipe Konten</label>
+                                        <div class="content-type-toggle">
+                                            <input type="radio" class="btn-check" name="content_type" id="content_type_simple" value="simple" checked>
+                                            <label class="btn btn-outline-primary" for="content_type_simple">
+                                                <i class="fas fa-align-left me-1"></i>Simple Text
+                                            </label>
+                                            
+                                            <input type="radio" class="btn-check" name="content_type" id="content_type_dynamic" value="dynamic">
+                                            <label class="btn btn-outline-primary" for="content_type_dynamic">
+                                                <i class="fas fa-puzzle-piece me-1"></i>Dynamic Builder
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Simple Content -->
+                                    <div class="col-md-12 mb-3" id="simple-content-container">
                                         <label for="content" class="form-label">Konten Berita</label>
-                                        <textarea class="form-control" name="content" id="content" rows="5" required></textarea>
+                                        <textarea class="form-control" name="content" id="content" rows="5"></textarea>
                                         @error('content')
+                                            <small class="text-danger">{{ $message }}</small>
+                                        @enderror
+                                    </div>
+                                    
+                                    <!-- Dynamic Content Builder -->
+                                    <div class="col-md-12 mb-3 d-none" id="dynamic-content-container">
+                                        <label class="form-label">Dynamic Content Builder</label>
+                                        <div class="dynamic-content-builder" id="dynamic-content-builder"></div>
+                                        <input type="hidden" name="dynamic_content" id="dynamic_content_input">
+                                        @error('dynamic_content')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
@@ -242,6 +295,46 @@
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
+                                    
+                                    <!-- Attachments Section -->
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">Lampiran</label>
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <div id="attachments-container">
+                                                    <div class="attachment-item mb-3">
+                                                        <div class="row">
+                                                            <div class="col-md-3">
+                                                                <select class="form-select attachment-type" name="attachment_types[]">
+                                                                    <option value="file">Upload File</option>
+                                                                    <option value="link">Link External</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <input type="text" class="form-control" name="attachment_titles[]" placeholder="Judul lampiran (opsional)">
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <input type="file" class="form-control attachment-file" name="attachment_files[]" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar">
+                                                                <input type="url" class="form-control attachment-link d-none" name="attachment_links[]" placeholder="https://...">
+                                                            </div>
+                                                            <div class="col-md-1">
+                                                                <button type="button" class="btn btn-danger btn-sm remove-attachment">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-secondary btn-sm" id="add-attachment">
+                                                    <i class="fas fa-plus me-1"></i>Tambah Lampiran
+                                                </button>
+                                                <small class="text-muted d-block mt-2">
+                                                    File yang didukung: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, ZIP, RAR (Max: 10MB)
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="col-12 d-flex justify-content-end">
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-save me-2"></i>Simpan
@@ -277,6 +370,9 @@
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
+                                                <a href="{{ route($spref . 'publikasi.berita-view', $item->slug) }}" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="Selengkapnya">
+                                                    <i class="fas fa-info-circle"></i>
+                                                </a>
                                                 <a href="#" data-bs-toggle="modal" data-bs-target="#editData{{ $item->code }}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Edit Berita">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
@@ -379,10 +475,37 @@
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
+                                <!-- Content Type Selection -->
                                 <div class="col-md-12 mb-3">
+                                    <label class="form-label">Tipe Konten</label>
+                                    <div class="content-type-toggle">
+                                        <input type="radio" class="btn-check edit-content-type" name="content_type" id="edit_content_type_simple_{{ $item->code }}" value="simple" {{ $item->content_type === 'simple' ? 'checked' : '' }}>
+                                        <label class="btn btn-outline-primary" for="edit_content_type_simple_{{ $item->code }}">
+                                            <i class="fas fa-align-left me-1"></i>Simple Text
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check edit-content-type" name="content_type" id="edit_content_type_dynamic_{{ $item->code }}" value="dynamic" {{ $item->content_type === 'dynamic' ? 'checked' : '' }}>
+                                        <label class="btn btn-outline-primary" for="edit_content_type_dynamic_{{ $item->code }}">
+                                            <i class="fas fa-puzzle-piece me-1"></i>Dynamic Builder
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Simple Content -->
+                                <div class="col-md-12 mb-3 {{ $item->content_type === 'dynamic' ? 'd-none' : '' }}" id="edit-simple-content-container-{{ $item->code }}">
                                     <label for="edit_content{{ $item->code }}" class="form-label">Konten Berita</label>
-                                    <textarea class="form-control" name="content" id="edit_content{{ $item->code }}" rows="5" required>{{ $item->content }}</textarea>
+                                    <textarea class="form-control" name="content" id="edit_content{{ $item->code }}" rows="5">{{ $item->content }}</textarea>
                                     @error('content')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                
+                                <!-- Dynamic Content Builder -->
+                                <div class="col-md-12 mb-3 {{ $item->content_type === 'simple' ? 'd-none' : '' }}" id="edit-dynamic-content-container-{{ $item->code }}">
+                                    <label class="form-label">Dynamic Content Builder</label>
+                                    <div class="dynamic-content-builder" id="edit-dynamic-content-builder-{{ $item->code }}"></div>
+                                    <input type="hidden" name="dynamic_content" id="edit_dynamic_content_input_{{ $item->code }}" value="{{ $item->dynamic_content ? json_encode($item->dynamic_content) : '' }}">
+                                    @error('dynamic_content')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
@@ -396,6 +519,65 @@
                                     @error('status')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
+                                </div>
+                                
+                                <!-- Existing Attachments -->
+                                @if($item->attachments && count($item->attachments) > 0)
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">Lampiran Saat Ini</label>
+                                        <div class="card">
+                                            <div class="card-body">
+                                                @foreach($item->attachments as $index => $attachment)
+                                                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                                                        <div>
+                                                            <strong>{{ $attachment['title'] }}</strong>
+                                                            <small class="text-muted d-block">{{ $attachment['type'] === 'file' ? 'File: ' . $attachment['original_name'] : 'Link: ' . $attachment['url'] }}</small>
+                                                        </div>
+                                                        <div>
+                                                            <input type="checkbox" name="keep_attachments[]" value="{{ $index }}" checked>
+                                                            <label class="form-check-label ms-1">Pertahankan</label>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                                
+                                <!-- New Attachments -->
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">Tambah Lampiran Baru</label>
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div id="edit-attachments-container-{{ $item->code }}">
+                                                <div class="attachment-item mb-3">
+                                                    <div class="row">
+                                                        <div class="col-md-3">
+                                                            <select class="form-select attachment-type" name="attachment_types[]">
+                                                                <option value="file">Upload File</option>
+                                                                <option value="link">Link External</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <input type="text" class="form-control" name="attachment_titles[]" placeholder="Judul lampiran (opsional)">
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <input type="file" class="form-control attachment-file" name="attachment_files[]" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar">
+                                                            <input type="url" class="form-control attachment-link d-none" name="attachment_links[]" placeholder="https://...">
+                                                        </div>
+                                                        <div class="col-md-1">
+                                                            <button type="button" class="btn btn-danger btn-sm remove-attachment">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn btn-secondary btn-sm add-edit-attachment" data-target="edit-attachments-container-{{ $item->code }}">
+                                                <i class="fas fa-plus me-1"></i>Tambah Lampiran
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -417,6 +599,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="{{ asset('js/dynamic-content-builder.js') }}"></script>
 
     <script>
         // Initialize DataTable
@@ -472,5 +656,270 @@
                 }
             });
         }
+
+        // Attachment functionality
+        $(document).ready(function() {
+            // Add new attachment
+            $('#add-attachment').click(function() {
+                const attachmentHtml = `
+                    <div class="attachment-item mb-3">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <select class="form-select attachment-type" name="attachment_types[]">
+                                    <option value="file">Upload File</option>
+                                    <option value="link">Link External</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" name="attachment_titles[]" placeholder="Judul lampiran (opsional)">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="file" class="form-control attachment-file" name="attachment_files[]" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar">
+                                <input type="url" class="form-control attachment-link d-none" name="attachment_links[]" placeholder="https://...">
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-danger btn-sm remove-attachment">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                $('#attachments-container').append(attachmentHtml);
+            });
+
+            // Remove attachment
+            $(document).on('click', '.remove-attachment', function() {
+                if ($('.attachment-item').length > 1) {
+                    $(this).closest('.attachment-item').remove();
+                } else {
+                    Swal.fire('Info', 'Minimal harus ada satu lampiran', 'info');
+                }
+            });
+
+            // Toggle between file and link input
+            $(document).on('change', '.attachment-type', function() {
+                const container = $(this).closest('.attachment-item');
+                const fileInput = container.find('.attachment-file');
+                const linkInput = container.find('.attachment-link');
+                
+                if ($(this).val() === 'file') {
+                    fileInput.removeClass('d-none');
+                    linkInput.addClass('d-none');
+                    linkInput.val('');
+                } else {
+                    fileInput.addClass('d-none');
+                    linkInput.removeClass('d-none');
+                    fileInput.val('');
+                }
+            });
+
+            // Add attachment for edit modal
+            $(document).on('click', '.add-edit-attachment', function() {
+                const targetContainer = $(this).data('target');
+                const attachmentHtml = `
+                    <div class="attachment-item mb-3">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <select class="form-select attachment-type" name="attachment_types[]">
+                                    <option value="file">Upload File</option>
+                                    <option value="link">Link External</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" name="attachment_titles[]" placeholder="Judul lampiran (opsional)">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="file" class="form-control attachment-file" name="attachment_files[]" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar">
+                                <input type="url" class="form-control attachment-link d-none" name="attachment_links[]" placeholder="https://...">
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-danger btn-sm remove-attachment">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                $('#' + targetContainer).append(attachmentHtml);
+            });
+        });
+
+        // Dynamic Content Builder functionality
+        let contentBuilder = null;
+        let editContentBuilders = {};
+
+        // Initialize content builder for add form
+        function initializeContentBuilder() {
+            if (contentBuilder) {
+                contentBuilder.clear();
+            }
+            contentBuilder = initDynamicContentBuilder('dynamic-content-builder');
+        }
+
+        // Initialize content builder for edit forms
+        function initializeEditContentBuilder(code, existingContent = null) {
+            const builderId = `edit-dynamic-content-builder-${code}`;
+            if (editContentBuilders[code]) {
+                editContentBuilders[code].clear();
+            }
+            editContentBuilders[code] = initDynamicContentBuilder(builderId);
+            
+            if (existingContent) {
+                editContentBuilders[code].loadContent(existingContent);
+            }
+        }
+
+        // Content type toggle for add form
+        $(document).on('change', 'input[name="content_type"]', function() {
+            const isSimple = $(this).val() === 'simple';
+            const simpleContainer = $('#simple-content-container');
+            const dynamicContainer = $('#dynamic-content-container');
+            const contentField = $('#content');
+            
+            if (isSimple) {
+                simpleContainer.removeClass('d-none');
+                dynamicContainer.addClass('d-none');
+                contentField.prop('required', true);
+                $('#dynamic_content_input').val('');
+            } else {
+                simpleContainer.addClass('d-none');
+                dynamicContainer.removeClass('d-none');
+                contentField.prop('required', false);
+                contentField.val('');
+                
+                // Initialize content builder if not already done
+                if (!contentBuilder) {
+                    initializeContentBuilder();
+                }
+            }
+        });
+
+        // Content type toggle for edit forms
+        $(document).on('change', '.edit-content-type', function() {
+            const isSimple = $(this).val() === 'simple';
+            const code = $(this).attr('id').split('_').pop();
+            const simpleContainer = $(`#edit-simple-content-container-${code}`);
+            const dynamicContainer = $(`#edit-dynamic-content-container-${code}`);
+            const contentField = $(`#edit_content${code}`);
+            
+            if (isSimple) {
+                simpleContainer.removeClass('d-none');
+                dynamicContainer.addClass('d-none');
+                contentField.prop('required', true);
+                $(`#edit_dynamic_content_input_${code}`).val('');
+            } else {
+                simpleContainer.addClass('d-none');
+                dynamicContainer.removeClass('d-none');
+                contentField.prop('required', false);
+                contentField.val('');
+                
+                // Initialize content builder for this edit form
+                const existingContent = $(`#edit_dynamic_content_input_${code}`).val();
+                initializeEditContentBuilder(code, existingContent);
+            }
+        });
+
+        // Form submission handling
+        $('form').on('submit', function(e) {
+            const form = $(this);
+            const contentType = form.find('input[name="content_type"]:checked').val();
+            
+            if (contentType === 'dynamic') {
+                e.preventDefault(); // Prevent default form submission
+                
+                // Check if this is add form or edit form
+                const isEditForm = form.find('[id^="edit_dynamic_content_input_"]').length > 0;
+                
+                // Create FormData from the form
+                const formData = new FormData(form[0]);
+                
+                if (isEditForm) {
+                    // Handle edit form
+                    const code = form.find('[id^="edit_dynamic_content_input_"]').attr('id').split('_').pop();
+                    if (editContentBuilders[code]) {
+                        // Use prepareFormData method to handle files
+                        editContentBuilders[code].prepareFormData(formData);
+                    }
+                } else {
+                    // Handle add form
+                    if (contentBuilder) {
+                        // Use prepareFormData method to handle files
+                        contentBuilder.prepareFormData(formData);
+                    }
+                }
+                
+                // Submit form using AJAX with FormData
+                $.ajax({
+                    url: form.attr('action'),
+                    method: form.attr('method') || 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        // Handle success - redirect or show success message
+                        if (response.redirect) {
+                            window.location.href = response.redirect;
+                        } else {
+                            location.reload();
+                        }
+                    },
+                    error: function(xhr) {
+                        // Handle error
+                        if (xhr.status === 422) {
+                            // Validation errors
+                            const errors = xhr.responseJSON.errors;
+                            // Display validation errors
+                            Object.keys(errors).forEach(key => {
+                                const errorElement = form.find(`[name="${key}"]`).siblings('.text-danger');
+                                if (errorElement.length) {
+                                    errorElement.text(errors[key][0]);
+                                } else {
+                                    // Create error element if it doesn't exist
+                                    form.find(`[name="${key}"]`).after(`<small class="text-danger">${errors[key][0]}</small>`);
+                                }
+                            });
+                        } else {
+                            Swal.fire('Error', 'Terjadi kesalahan saat menyimpan data', 'error');
+                        }
+                    }
+                });
+            } else {
+                // For simple content, use normal form submission
+                if (contentType === 'simple') {
+                    // Clear dynamic content input
+                    form.find('input[name="dynamic_content"]').val('');
+                }
+            }
+        });
+
+        // Initialize edit content builders when modals are shown
+        $('.modal').on('shown.bs.modal', function() {
+            const modal = $(this);
+            const code = modal.attr('id').replace('editData', '');
+            const contentType = modal.find('.edit-content-type:checked').val();
+            
+            if (contentType === 'dynamic') {
+                const existingContent = $(`#edit_dynamic_content_input_${code}`).val();
+                initializeEditContentBuilder(code, existingContent);
+            }
+        });
+
+        // Initialize content builder when dynamic content is first selected
+        $(document).ready(function() {
+            // Check if dynamic content is selected by default in any edit form
+            $('.edit-content-type:checked').each(function() {
+                if ($(this).val() === 'dynamic') {
+                    const code = $(this).attr('id').split('_').pop();
+                    const existingContent = $(`#edit_dynamic_content_input_${code}`).val();
+                    if (existingContent) {
+                        // Delay initialization to ensure DOM is ready
+                        setTimeout(() => {
+                            initializeEditContentBuilder(code, existingContent);
+                        }, 100);
+                    }
+                }
+            });
+        });
     </script>
 @endsection

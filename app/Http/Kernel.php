@@ -65,11 +65,17 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'first.setup' => \App\Http\Middleware\FirstSetup::class,
+        'prevent.multiple.setup' => \App\Http\Middleware\PreventMultipleSetup::class,
         'checkUser' => \App\Http\Middleware\checkUser::class,
         // 'user-access' => \App\Http\Middleware\UserAccess::class,
         // 'mhs-access' => \App\Http\Middleware\MhsAccess::class,
-        // 'dsn-access' => \App\Http\Middleware\DsnAccess::class,
+        'dsn-access' => \App\Http\Middleware\DsnAccess::class,
+        'mhs.access' => \App\Http\Middleware\MhsAccess::class,
+        'auth.pendaftar' => \App\Http\Middleware\AuthenticatePendaftar::class,
+        'terminal' => \App\Http\Middleware\CheckTerminalStatus::class,
+        'prevent.back.cache' => \App\Http\Middleware\PreventBackButtonCache::class,
         // 'is-active' => \App\Http\Middleware\isActive::class,
+
 
     ];
 }

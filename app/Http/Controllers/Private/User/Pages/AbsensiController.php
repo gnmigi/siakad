@@ -15,6 +15,7 @@ use App\Models\Pengaturan\WebSetting;
 use Alert;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+use Carbon\Carbon; // <-- Pastikan Carbon dipanggil di sini
 
 class AbsensiController extends Controller
 {
@@ -25,7 +26,7 @@ class AbsensiController extends Controller
         $data['spref'] = $user ? $user->prefix : '';
         $data['menus'] = "Daftar";
         $data['pages'] = "Absensi";
-        $data['academy'] = $data['webs']->school_apps . ' by ' . $data['webs']->school_name;
+        $data['academy'] = $data['webs']->school_apps . ' oleh ' . $data['webs']->school_name;
         $data['absensi'] = Absensi::where('user_id', $user->id)->latest()->get();
         
         return view('central.backpage.absen-index', $data, compact('user'));
@@ -34,9 +35,12 @@ class AbsensiController extends Controller
     public function handleAbsensi(Request $request)
     {
         try {
-            // Check if user already has absensi for today
+            // Konversi tanggal di awal untuk mencegah error format MySQL
+            $tanggalDB = Carbon::parse($request->date)->format('Y-m-d');
+
+            // Check if user already has absensi for today (gunakan tanggal yang sudah dikonversi)
             $existingAbsensi = Absensi::where('user_id', Auth::id())
-                ->whereDate('date', $request->date)
+                ->whereDate('date', $tanggalDB)
                 ->first();
 
             // Allow multiple attendance only for overtime (type 1)
@@ -48,7 +52,7 @@ class AbsensiController extends Controller
             // Validate the request
             $validator = Validator::make($request->all(), [
                 'type' => 'required|integer|in:0,1,2,3,4,5,6,7',
-                'date' => 'required|date',
+                'date' => 'required', // Validasi standar, kita sudah konversi secara manual
                 'time_in' => 'required|date_format:H:i',
                 'photo_in' => 'required|image|mimes:jpeg,png,jpg|max:8192',
                 'desc' => 'nullable|string',
@@ -62,6 +66,9 @@ class AbsensiController extends Controller
 
             $user = Auth::user();
             $data = $validator->validated();
+
+            // Timpa inputan date dengan format yang sudah benar
+            $data['date'] = $tanggalDB;
 
             // Generate unique code for absensi
             $data['code'] = 'ABS-' . date('Ymd') . '-' . $user->code . '-' . uniqid();

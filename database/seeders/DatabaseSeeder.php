@@ -10,7 +10,7 @@ use Carbon\Carbon;
 // DEFAULT AUTHENTIKASI
 use App\Models\User;
 use App\Models\Dosen;
-use App\Models\Mahasiswa;
+use App\Models\Mahasantri;
 
 class DatabaseSeeder extends Seeder
 {
@@ -41,6 +41,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             UserSeeder::class,
+            \Database\Seeders\MataKuliahDosenSeeder::class,
             \Database\Seeders\Master\AkademikSeeder::class,
             \Database\Seeders\Master\PublikasiSeeder::class,
             \Database\Seeders\Master\PMBSeeder::class,

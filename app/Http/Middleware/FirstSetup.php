@@ -18,10 +18,15 @@ class FirstSetup
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Skip setup check for welcome, API setup, mahasiswa and dosen routes
+        if ($request->is('welcome') || $request->is('api/setup') || $request->is('mahasiswa/*') || $request->is('dosen/*')) {
+            return $next($request);
+        }
+
         try {
             // Check if WebSetting exists
             $webSetting = WebSetting::first();
-            
+
             // If no WebSetting exists, redirect to welcome page
             if (!$webSetting) {
                 return redirect()->route('root.welcome');

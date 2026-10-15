@@ -1,9 +1,9 @@
 @extends('base.base-dash-index')
 @section('title')
-    Lihat Tugas Kuliah Mahasiswa - Siakad By Internal Developer
+    Lihat Tugas Kuliah Mahasantri - Siakad By Internal Developer
 @endsection
 @section('menu')
-    Data Tugas Kuliah Mahasiswa
+    Data Tugas Kuliah Mahasantri
 @endsection
 @section('submenu')
     Tugas {{ $score->task->jadkul->matkul->name }} - {{ $score->task->jadkul->pert_id }}
@@ -12,7 +12,7 @@
 {{ route('dosen.akademik.stask-view', $score->task->code) }}
 @endsection
 @section('subdesc')
-    Halaman untuk melihat detail Tugas Kuliah Mahasiswa
+    Halaman untuk melihat detail Tugas Kuliah Mahasantri
 @endsection
 @section('custom-css')
     <link rel="stylesheet" href="{{ asset('dist') }}/assets/extensions/summernote/summernote-lite.css">
@@ -38,7 +38,7 @@
                 </div>
                 <div class="card-body row">
                     <div class="form-group col-lg-4 col-12">
-                        <label for="mhs_name">Nama Mahasiswa</label>
+                        <label for="mhs_name">Nama Mahasantri</label>
                         <input type="text" readonly id="mhs_name" name="mhs_name" class="form-control" value="{{ $score->student->mhs_name }}">
                         @error('mhs_name')
                             <small class="text-danger">{{ $message }}</small>

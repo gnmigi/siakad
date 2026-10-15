@@ -18,7 +18,7 @@ class DsnAccess
         // Cek apakah pengguna sudah login
         if (auth()->guard('dosen')->check()) {
             // Jika sudah login, cek tipe pengguna
-            if(auth()->guard('dosen')->user()->dsn_stat == $DosenDsnStat){
+            if(auth()->guard('dosen')->user()->raw_type == (int)$DosenDsnStat){
                 return $next($request);
             }
 
@@ -26,6 +26,6 @@ class DsnAccess
         }
 
         // Jika belum login, arahkan ke rute 'auth-login'
-        return redirect()->route('dosen.auth-signin-page');
+        return redirect()->route('auth.render-signin');
     }
 }

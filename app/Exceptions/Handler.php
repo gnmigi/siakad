@@ -30,12 +30,12 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
-        $this->renderable(function (NotFoundHttpException $e, $request) {
-            // Alert::error('Error', 'Halaman tidak ditemukan');
+        // $this->renderable(function (NotFoundHttpException $e, $request) {
+        //     // Alert::error('Error', 'Halaman tidak ditemukan');
 
-            return redirect()->route('error.notfound');
-                // return response()->view('errors.404', [], 404);
-        });
+        //     return redirect()->route('error.notfound');
+        //         // return response()->view('errors.404', [], 404);
+        // });
         $this->renderable(function (QueryException $e, $request) {
             return redirect()->route('root.welcome');
         });
