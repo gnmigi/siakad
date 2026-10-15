@@ -18,6 +18,9 @@ mkdir -p /var/www/html/storage/framework/cache/data \
          /var/www/html/storage/logs \
          /var/www/html/bootstrap/cache
 
+# Mark application as installed
+touch /var/www/html/storage/installed
+
 # Clean stale bootstrap cache files from development before discovering
 rm -f /var/www/html/bootstrap/cache/*.php
 
