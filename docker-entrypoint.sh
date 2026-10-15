@@ -5,6 +5,9 @@ set -e
 PORT="${PORT:-80}"
 sed -i "s/80/$PORT/g" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
 
+# Discover packages now that environment variables are loaded
+php artisan package:discover --ansi || true
+
 # Storage link
 php artisan storage:link || true
 
